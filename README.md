@@ -51,7 +51,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 
 - **Activity feed** in plain English: "merged PR #4: Add login", "pushed 3 commits to main: …".
 - **Live updates:** project pages refresh in the background, so webhook changes appear without a reload.
-- **Daily AI journal:** every evening Gemini turns the day's commits, issues and PRs across all your repos into a short first-person entry. You can edit it to add what GitHub can't see (what you learned, what got you stuck), regenerate it, or write today's entry on demand. Days follow your local time zone, not UTC.
+- **Daily AI journal:** every evening Gemini turns the day's commits, issues and PRs across your public repos into a short first-person entry. Private repos are never sent to the model. You can edit it to add what GitHub can't see (what you learned, what got you stuck), regenerate it, or write today's entry on demand. Days follow your local time zone, not UTC.
 
 <details>
 <summary><b>Dashboard screenshot</b></summary>
@@ -97,6 +97,7 @@ Decisions worth calling out:
 - **64-bit GitHub IDs:** GitHub issue IDs have already passed the 32-bit integer limit, so all GitHub IDs are stored as `BigInt`.
 - **Next.js 16 Cache Components:** pages prerender a static shell, and anything that reads the session is streamed inside `<Suspense>`. A small `getSession()` helper calls `connection()` before Auth.js, which otherwise touches `crypto` and `Date.now()` during prerendering.
 - **Free-tier AI that degrades gracefully:** the journal runs on Gemini's free tier, whose shared capacity is sometimes busy (`503`) or out of quota (`429`). Instead of the SDK's long built-in retries, each model gets one 30-second attempt and the next free model takes over, so a busy model costs seconds rather than a failed entry.
+- **Private code stays private:** Gemini's free tier may use prompts to improve Google's products, so the journal query filters to public repos at the database level; private-repo events never leave the app.
 - **Prompt-injection-aware prompt:** commit messages and issue titles are user-controlled text. They're wrapped in an `<activity>` block and the system instruction tells the model to treat them strictly as content to summarise.
 - **Time-zone-correct days:** "today" means the developer's calendar day (Europe/Sofia by default), computed with `Intl` and checked across daylight-saving changes, including the 25-hour day in October.
 - **Accessibility:** drag and drop has a keyboard- and touch-friendly dropdown alternative, columns are labelled regions, and controls have screen-reader labels.
@@ -144,7 +145,7 @@ Requires Node.js 20+ and a PostgreSQL database (a local install, or a free one f
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`: create a GitHub OAuth app at
      <https://github.com/settings/developers> with callback URL
      `http://localhost:3000/api/auth/callback/github`
-   - `GEMINI_API_KEY`: a free key from <https://aistudio.google.com/apikey> (on the free tier, Google may use prompts to improve its products)
+   - `GEMINI_API_KEY`: a free key from <https://aistudio.google.com/apikey> (on the free tier Google may use prompts to improve its products, which is why only public-repo activity is sent)
    - `CRON_SECRET`: any long random string; it protects the evening journal job
 3. **Create the database tables:**
    ```bash

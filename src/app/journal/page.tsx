@@ -44,8 +44,9 @@ async function Journal() {
       <header>
         <h1 className="text-2xl font-bold">Journal</h1>
         <p className="mt-1 max-w-2xl text-foreground/70">
-          Gemini drafts an entry from each day&apos;s GitHub activity. Edit it to add what GitHub
-          can&apos;t see: what you learned, what got you stuck.
+          Gemini drafts an entry from each day&apos;s GitHub activity in your public repos. Edit it
+          to add what GitHub can&apos;t see: what you learned, what got you stuck. Private repos are
+          never sent to Gemini.
         </p>
       </header>
 
@@ -53,7 +54,7 @@ async function Journal() {
         <h2 id="today-heading" className="font-semibold">
           Today
           <span className="ml-2 text-sm font-normal text-foreground/50">
-            {todayEvents.length} GitHub event{todayEvents.length === 1 ? "" : "s"} so far
+            {todayEvents.length} public GitHub event{todayEvents.length === 1 ? "" : "s"} so far
           </span>
         </h2>
         {todayEntry ? (
@@ -69,7 +70,7 @@ async function Journal() {
           <div className="flex flex-col gap-3 rounded-lg border border-dashed border-foreground/20 p-4">
             <p className="text-sm text-foreground/70">
               {todayEvents.length === 0
-                ? "Nothing on GitHub yet today. Push, open an issue or a PR, and there will be something to write about."
+                ? "Nothing in your public repos yet today. Push, open an issue or a PR, and there will be something to write about."
                 : "No entry yet. One is written automatically each evening, or write it now."}
             </p>
             <GenerateButton day={today} disabled={todayEvents.length === 0} />

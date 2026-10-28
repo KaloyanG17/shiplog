@@ -29,7 +29,7 @@ export async function generateEntryAction(day: string): Promise<ActionResult> {
     const result = await generateJournalDraft(userId, parsedDay.data, { replaceEdits: true });
     refresh();
     if (result.status === "no-activity") {
-      return { error: "No GitHub activity recorded for this day, so there's nothing to write about yet." };
+      return { error: "No activity in your public repos for this day, so there's nothing to write about yet." };
     }
     return { message: result.status === "created" ? "Draft written." : "Draft rewritten." };
   } catch (error) {

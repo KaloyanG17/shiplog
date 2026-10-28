@@ -22,7 +22,11 @@ export async function GET(request: NextRequest) {
   const users = await db.user.findMany({
     where: {
       installations: {
-        some: { repos: { some: { events: { some: { occurredAt: { gte: start, lt: end } } } } } },
+        some: {
+          repos: {
+            some: { isPrivate: false, events: { some: { occurredAt: { gte: start, lt: end } } } },
+          },
+        },
       },
     },
     select: { id: true },

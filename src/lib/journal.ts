@@ -92,12 +92,14 @@ function offsetMinutes(instant: Date) {
   return (match[1] === "-" ? -1 : 1) * (Number(match[2]) * 60 + Number(match[3]));
 }
 
+// Only public repos: the Gemini free tier may use prompts to improve Google's
+// products, so private code activity is never sent.
 export function getDayEvents(userId: string, day: string) {
   const { start, end } = dayRange(day);
   return db.githubEvent.findMany({
     where: {
       occurredAt: { gte: start, lt: end },
-      repo: { installation: { userId } },
+      repo: { isPrivate: false, installation: { userId } },
     },
     include: { repo: { select: { fullName: true } } },
     orderBy: { occurredAt: "asc" },
