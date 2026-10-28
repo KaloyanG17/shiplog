@@ -22,7 +22,7 @@ export function ImportIssuesButton({ projectId }: { projectId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      {message && <span className="text-sm text-foreground/60">{message}</span>}
+      {message && <span className="text-sm text-white/75">{message}</span>}
       <button
         type="button"
         disabled={isPending}
@@ -37,7 +37,7 @@ export function ImportIssuesButton({ projectId }: { projectId: string }) {
             }
           })
         }
-        className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm font-medium hover:bg-foreground/5 disabled:opacity-50"
+        className="btn-ghost h-10 px-5 text-sm"
       >
         {isPending ? "Importing…" : "Import open issues"}
       </button>

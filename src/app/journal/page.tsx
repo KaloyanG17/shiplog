@@ -42,8 +42,11 @@ async function Journal() {
   return (
     <div className="flex flex-col gap-8">
       <header>
-        <h1 className="text-2xl font-bold">Journal</h1>
-        <p className="mt-1 max-w-2xl text-foreground/70">
+        <h1 className="flex flex-wrap items-baseline gap-x-3 leading-none tracking-tight">
+          <span className="text-5xl font-black">Journal.</span>
+          <span className="font-serif text-4xl italic text-white/90">Remember it all.</span>
+        </h1>
+        <p className="mt-3 max-w-2xl text-white/80">
           Gemini drafts an entry from each day&apos;s GitHub activity in your public repos. Edit it
           to add what GitHub can&apos;t see: what you learned, what got you stuck. Private repos are
           never sent to Gemini.
@@ -51,9 +54,9 @@ async function Journal() {
       </header>
 
       <section aria-labelledby="today-heading" className="flex flex-col gap-3">
-        <h2 id="today-heading" className="font-semibold">
+        <h2 id="today-heading" className="text-lg font-semibold">
           Today
-          <span className="ml-2 text-sm font-normal text-foreground/50">
+          <span className="ml-2 rounded-full bg-white/10 px-2 py-0.5 text-xs font-normal text-white/75">
             {todayEvents.length} public GitHub event{todayEvents.length === 1 ? "" : "s"} so far
           </span>
         </h2>
@@ -67,8 +70,8 @@ async function Journal() {
             edited={todayEntry.content !== null}
           />
         ) : (
-          <div className="flex flex-col gap-3 rounded-lg border border-dashed border-foreground/20 p-4">
-            <p className="text-sm text-foreground/70">
+          <div className="glass flex flex-col gap-3 rounded-2xl p-5">
+            <p className="text-sm text-white/80">
               {todayEvents.length === 0
                 ? "Nothing in your public repos yet today. Push, open an issue or a PR, and there will be something to write about."
                 : "No entry yet. One is written automatically each evening, or write it now."}
@@ -79,11 +82,11 @@ async function Journal() {
       </section>
 
       <section aria-labelledby="past-heading" className="flex flex-col gap-3">
-        <h2 id="past-heading" className="font-semibold">
+        <h2 id="past-heading" className="text-lg font-semibold">
           Earlier
         </h2>
         {pastEntries.length === 0 ? (
-          <p className="text-sm text-foreground/60">Past entries will appear here.</p>
+          <p className="glass rounded-2xl p-4 text-sm text-white/75">Past entries will appear here.</p>
         ) : (
           pastEntries.map((entry) => (
             <JournalEntry
@@ -98,7 +101,7 @@ async function Journal() {
         )}
       </section>
 
-      <p className="text-xs text-foreground/40">Days follow the {JOURNAL_TIME_ZONE} time zone.</p>
+      <p className="text-xs text-white/60">Days follow the {JOURNAL_TIME_ZONE} time zone.</p>
     </div>
   );
 }

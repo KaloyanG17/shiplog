@@ -27,10 +27,12 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
   }
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-foreground/10 p-4">
+    <article className="glass flex flex-col gap-3 rounded-2xl p-5">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="font-semibold">{label}</h3>
-        <span className="text-xs text-foreground/50">{edited ? "Edited by you" : "AI draft"}</span>
+        <h3 className="font-serif text-2xl italic">{label}</h3>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/75">
+          {edited ? "Edited by you" : "AI draft"}
+        </span>
       </header>
 
       {isEditing ? (
@@ -44,14 +46,14 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
             onChange={(event) => setDraft(event.target.value)}
             rows={Math.max(6, draft.split("\n").length + 1)}
             maxLength={10_000}
-            className="w-full rounded-md border border-foreground/15 bg-background p-3 text-sm leading-relaxed"
+            className="field w-full rounded-xl p-3 text-sm leading-relaxed"
           />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={isPending}
               onClick={() => run(() => saveEntryAction(id, draft), () => setIsEditing(false))}
-              className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-50"
+              className="btn-primary h-9 px-4 text-sm"
             >
               {isPending ? "Saving…" : "Save"}
             </button>
@@ -62,7 +64,7 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
                 setDraft(text);
                 setIsEditing(false);
               }}
-              className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm hover:bg-foreground/5"
+              className="btn-ghost h-9 px-4 text-sm"
             >
               Cancel
             </button>
@@ -70,7 +72,7 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
         </>
       ) : (
         <>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed">{text}</p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/90">{text}</p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -78,7 +80,7 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
                 setDraft(text);
                 setIsEditing(true);
               }}
-              className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm hover:bg-foreground/5"
+              className="btn-ghost h-9 px-4 text-sm"
             >
               Edit
             </button>
@@ -89,7 +91,7 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
                 if (edited && !window.confirm("Rewrite this entry? Your edits will be replaced.")) return;
                 run(() => generateEntryAction(day));
               }}
-              className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm hover:bg-foreground/5 disabled:opacity-50"
+              className="btn-ghost h-9 px-4 text-sm"
             >
               {isPending ? "Writing…" : "Regenerate"}
             </button>
@@ -98,7 +100,7 @@ export function JournalEntry({ id, day, label, text, edited }: EntryProps) {
       )}
 
       {result && (
-        <p role="status" className={`text-sm ${result.error ? "text-red-600" : "text-foreground/60"}`}>
+        <p role="status" className={`text-sm ${result.error ? "text-red-300" : "text-white/70"}`}>
           {result.error ?? result.message}
         </p>
       )}
@@ -121,12 +123,12 @@ export function GenerateButton({ day, disabled }: { day: string; disabled: boole
             setResult(await generateEntryAction(day));
           })
         }
-        className="rounded-md bg-foreground px-3 py-1.5 text-sm font-medium text-background disabled:opacity-40"
+        className="btn-primary h-10 px-5 text-sm"
       >
         {isPending ? "Writing…" : "Write today's entry"}
       </button>
       {result?.error && (
-        <p role="status" className="text-sm text-red-600">
+        <p role="status" className="text-sm text-red-300">
           {result.error}
         </p>
       )}

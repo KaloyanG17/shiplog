@@ -2,7 +2,7 @@ import { signIn, signOut } from "@/auth";
 
 export function SignInButton({
   redirectTo = "/dashboard",
-  className = "inline-flex items-center gap-2 rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90",
+  className = "btn-primary h-11 px-6 text-sm",
 }: {
   redirectTo?: string;
   className?: string;

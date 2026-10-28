@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { HomeCta, HomeCtaPlaceholder } from "@/components/home-cta";
-import { HeroShader } from "@/components/hero-shader";
 
 const steps = [
   { title: "Plan", text: "A personal board where your GitHub issues show up as cards." },
@@ -12,15 +11,8 @@ const steps = [
 export default function Home() {
   return (
     <div className="flex flex-col gap-16">
-      <section className="relative isolate overflow-hidden rounded-3xl bg-cyan-950 text-white">
-        <HeroShader />
-        {/* Keeps the text readable over the brightest parts of the gradient. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent"
-        />
-
-        <div className="relative flex min-h-[32rem] flex-col justify-center gap-6 px-6 py-14 sm:px-12">
+      <section className="relative text-white">
+        <div className="relative flex min-h-[calc(100svh-12rem)] flex-col justify-center gap-6 py-10">
           <p className="w-fit rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur">
             ✨ New: an AI-written dev journal
           </p>
@@ -42,10 +34,7 @@ export default function Home() {
             <Suspense fallback={<HomeCtaPlaceholder />}>
               <HomeCta />
             </Suspense>
-            <a
-              href="#how-it-works"
-              className="inline-flex h-12 items-center rounded-full border border-white/60 px-7 text-sm font-semibold transition hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
+            <a href="#how-it-works" className="btn-ghost h-12 px-7 text-sm font-semibold">
               See how it works
             </a>
           </div>
@@ -60,10 +49,10 @@ export default function Home() {
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {steps.map((step, i) => (
-            <div key={step.title} className="rounded-lg border border-foreground/10 p-4">
-              <p className="text-sm text-foreground/50">{i + 1}</p>
+            <div key={step.title} className="glass rounded-2xl p-5">
+              <p className="text-sm text-white/60">{i + 1}</p>
               <h3 className="font-semibold">{step.title}</h3>
-              <p className="mt-1 text-sm text-foreground/70">{step.text}</p>
+              <p className="mt-1 text-sm text-white/80">{step.text}</p>
             </div>
           ))}
         </div>
@@ -75,7 +64,7 @@ export default function Home() {
 // Slowly spinning "PLAN · CODE · LOG · SHARE" ring, bottom-right of the hero.
 function LoopBadge() {
   return (
-    <div aria-hidden className="absolute right-6 bottom-6 hidden size-28 sm:block">
+    <div aria-hidden className="absolute right-0 bottom-10 hidden size-32 sm:block">
       <svg viewBox="0 0 100 100" className="size-full animate-[spin_24s_linear_infinite] motion-reduce:animate-none">
         <defs>
           <path id="loop-circle" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" />

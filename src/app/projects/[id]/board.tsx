@@ -49,7 +49,7 @@ export function Board({ projectId, cards }: { projectId: string; cards: BoardCar
 
   return (
     <div className="flex flex-col gap-2">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-300">{error}</p>}
       {/* Five columns share the width on wide screens and scroll sideways on phones. */}
       <div className="-mx-4 overflow-x-auto px-4 pb-2">
         <div className="grid grid-cols-[repeat(5,minmax(11rem,1fr))] gap-3">
@@ -72,22 +72,22 @@ export function Board({ projectId, cards }: { projectId: string; cards: BoardCar
                   const id = event.dataTransfer.getData("text/plain");
                   if (id) move(id, column.id);
                 }}
-                className={`flex min-w-0 flex-col gap-2 rounded-lg border p-2 transition-colors ${
-                  dragOver === column.id
-                    ? "border-foreground/40 bg-foreground/10"
-                    : "border-foreground/10 bg-foreground/[0.03]"
+                className={`glass flex min-w-0 flex-col gap-2 rounded-2xl p-2.5 transition-colors ${
+                  dragOver === column.id ? "border-white/50 bg-white/15" : ""
                 }`}
               >
                 <h3 className="flex items-center justify-between px-1 text-sm font-semibold">
                   {column.label}
-                  <span className="text-xs font-normal text-foreground/50">{columnCards.length}</span>
+                  <span className="rounded-full bg-white/10 px-2 text-xs font-normal text-white/75">
+                    {columnCards.length}
+                  </span>
                 </h3>
 
                 {columnCards.map((card) => (
                   <CardItem key={card.id} card={card} onMove={move} />
                 ))}
                 {columnCards.length === 0 && (
-                  <p className="rounded-md border border-dashed border-foreground/15 p-3 text-center text-xs text-foreground/40">
+                  <p className="rounded-xl border border-dashed border-white/20 p-3 text-center text-xs text-white/55">
                     Drop cards here
                   </p>
                 )}
@@ -119,20 +119,20 @@ function CardItem({
         event.dataTransfer.setData("text/plain", card.id);
         event.dataTransfer.effectAllowed = "move";
       }}
-      className="cursor-grab rounded-md border border-foreground/10 bg-background p-2.5 shadow-sm active:cursor-grabbing"
+      className="glass-strong cursor-grab rounded-xl p-3 shadow-lg shadow-black/20 active:cursor-grabbing"
     >
       <p className="text-sm leading-snug">{card.title}</p>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-foreground/60">
+      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-white/70">
         {card.url ? (
           <a href={card.url} target="_blank" rel="noreferrer" className="hover:underline">
             #{card.issueNumber}
           </a>
         ) : (
-          <span className="rounded border border-foreground/15 px-1">to-do</span>
+          <span className="rounded-full border border-white/20 px-1.5">to-do</span>
         )}
         {card.prNumber !== null && (
-          <span className="rounded bg-purple-600/15 px-1 text-purple-700 dark:text-purple-300">
+          <span className="rounded-full bg-purple-400/20 px-1.5 text-purple-200">
             PR #{card.prNumber}
           </span>
         )}
@@ -146,7 +146,7 @@ function CardItem({
           id={`move-${card.id}`}
           value={card.column}
           onChange={(event) => onMove(card.id, event.target.value as CardColumn)}
-          className="rounded border border-foreground/15 bg-background px-1 py-0.5 text-xs"
+          className="field rounded-md px-1 py-0.5 text-xs"
         >
           {COLUMNS.map((column) => (
             <option key={column.id} value={column.id}>
@@ -159,7 +159,7 @@ function CardItem({
             type="button"
             disabled={isDeleting}
             onClick={() => startDelete(() => deleteCardAction(card.id))}
-            className="text-xs text-foreground/50 hover:text-red-600 disabled:opacity-50"
+            className="text-xs text-white/60 hover:text-red-300 disabled:opacity-50"
           >
             Delete
           </button>
@@ -195,12 +195,12 @@ function AddCardForm({ projectId }: { projectId: string }) {
         placeholder="Add a to-do…"
         maxLength={200}
         size={1}
-        className="min-w-0 flex-1 rounded border border-foreground/15 bg-background px-2 py-1 text-sm"
+        className="field min-w-0 flex-1 rounded-lg px-2 py-1 text-sm"
       />
       <button
         type="submit"
         disabled={isPending || !title.trim()}
-        className="rounded bg-foreground px-2 py-1 text-sm text-background disabled:opacity-40"
+        className="btn-primary h-8 px-3 text-sm"
       >
         Add
       </button>

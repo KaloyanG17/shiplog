@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { HeroShader } from "@/components/hero-shader";
 import { UserMenu } from "@/components/user-menu";
 import "./globals.css";
 
@@ -34,7 +35,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <header className="border-b border-foreground/10">
+        {/* Site-wide animated background. It lives in the layout so it keeps
+            running across page navigations instead of restarting. */}
+        <div aria-hidden className="fixed inset-0 -z-10">
+          <HeroShader />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+        <header className="sticky top-0 z-20 border-b border-white/10 bg-black/30 backdrop-blur-md">
           <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
             <Link href="/" className="font-semibold tracking-tight">
               ⛵ Shiplog
