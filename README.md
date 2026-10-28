@@ -3,12 +3,14 @@
 **A personal dev board that keeps itself up to date from GitHub.**
 Issues become cards, pull requests move them across the board, every push, issue and PR lands in a project activity feed, and each evening an AI writes up your day in a dev journal.
 
+[![CI](https://github.com/KaloyanG17/shiplog/actions/workflows/ci.yml/badge.svg)](https://github.com/KaloyanG17/shiplog/actions/workflows/ci.yml)
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
 ![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)
 ![Prisma 7](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169e1?logo=postgresql&logoColor=white)
 ![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-React_Three_Fiber-000000?logo=threedotjs)
 
 ![Shiplog project board: five columns of cards and a recent-activity feed](docs/screenshots/board.png)
 
@@ -26,8 +28,8 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 |---|---|---|
 | **Plan** | Kanban board per project; GitHub issues sync in as cards next to private to-dos | ✅ Working |
 | **Code** | Webhooks move cards as you open, review and merge PRs | ✅ Working |
-| **Log** | Activity feed per project; AI-drafted daily journal | ✅ Working (weekly summaries next) |
-| **Share** | Public project page with changelog and an upvotable roadmap | ⏳ Planned |
+| **Log** | Activity feed per project; AI-drafted daily journal; weekly summary with CV bullets | ✅ Working |
+| **Share** | Public project page with an upvotable roadmap and a changelog of merged PRs | ✅ Working |
 
 ## Features
 
@@ -52,6 +54,14 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 - **Activity feed** in plain English: "merged PR #4: Add login", "pushed 3 commits to main: …".
 - **Live updates:** project pages refresh in the background, so webhook changes appear without a reload.
 - **Daily AI journal:** every evening Gemini turns the day's commits, issues and PRs across your public repos into a short first-person entry. Private repos are never sent to the model. You can edit it to add what GitHub can't see (what you learned, what got you stuck), regenerate it, or write today's entry on demand. Days follow your local time zone, not UTC.
+- **Weekly summary → CV bullets:** one click turns the week's journal into a short summary and three CV-ready bullet points, with a Copy button.
+- **Public project page** (`/p/<project>`): switch it on per project to share an upvotable roadmap of open cards (anonymous, one vote per visitor) and a changelog that merged PRs add to automatically.
+- **Contribution heatmap:** your real GitHub contribution year on the dashboard. Click a day to see the projects you worked on and that day's journal entry.
+- **In 3D** (React Three Fiber, loaded only when used, and still for reduced motion):
+  - **Contribution skyline:** a 2D / 3D switch turns the heatmap into a city of bars you can orbit; click a bar to open that day.
+  - **Kanban galaxy:** each column is a planet and its cards orbit it as small ships; grab one and fly it to another planet to move the card.
+  - **Sailboat:** the homepage sea gets rougher the busier your past week was.
+  - **3D folder cards** that tilt toward the mouse.
 
 <details>
 <summary><b>Dashboard screenshot</b></summary>
@@ -113,6 +123,8 @@ Decisions worth calling out:
 | GitHub | GitHub App + Octokit (`@octokit/app`, `@octokit/webhooks`) |
 | AI | Google Gemini API, free tier (`@google/genai`) |
 | Scheduled jobs | Vercel Cron |
+| 3D | Three.js with React Three Fiber and drei |
+| Testing / CI | Vitest, GitHub Actions (lint, typecheck, tests, build) |
 | Validation | Zod |
 | Local webhooks | [smee.io](https://smee.io) tunnel |
 
@@ -123,11 +135,14 @@ Decisions worth calling out:
 - [x] Signed webhook endpoint with event storage
 - [x] Kanban board with issue sync and PR-driven card moves
 - [x] Daily AI journal: drafted from the day's GitHub activity, editable
-- [ ] Weekly summaries and "export as CV bullets"
-- [ ] Public project page: changelog from merged PRs and published journal entries
-- [ ] Public roadmap with upvotes
-- [ ] Automated tests (Vitest, Playwright) and CI on GitHub Actions
+- [x] Weekly summaries and CV bullets
+- [x] Public project page: changelog from merged PRs and manual entries
+- [x] Public roadmap with upvotes
+- [x] Unit tests (Vitest) and CI on GitHub Actions
+- [x] 3D: contribution skyline, kanban galaxy, homepage sailboat
 - [ ] Deploy to Vercel
+- [ ] End-to-end tests (Playwright) for sign-in and the board
+- [ ] Organisation installs of the GitHub App
 
 ---
 
@@ -192,6 +207,7 @@ Login uses the OAuth app above. Reading repos uses a separate **GitHub App**, so
 | `npm run webhooks:dev` | Forward GitHub webhooks from smee.io to the dev server |
 | `npm run build` / `npm start` | Production build / run it |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript checks |
+| `npm test` / `npm run test:watch` | Unit tests (Vitest) |
 | `npm run db:migrate` | Create and apply a migration after changing `prisma/schema.prisma` |
 | `npm run db:studio` | Browse the database in Prisma Studio |
 
