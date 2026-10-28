@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { FolderAction, FolderCard, paperFor } from "@/components/folder-card";
+import { DayDetail } from "@/components/day-detail";
 import { GitHubActivity, GitHubActivitySkeleton } from "@/components/github-activity";
 import { db } from "@/lib/db";
 import { getInstallUrl, getManageInstallationUrl } from "@/lib/github";
@@ -20,8 +21,11 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
   const session = await getSession();
   if (!session?.user?.id) redirect("/login");
 
-  const { connected, error, sort: sortParam } = await searchParams;
+  const { connected, error, sort: sortParam, day: dayParam } = await searchParams;
   const sort = parseSort(sortParam);
+  const selectedDay =
+    typeof dayParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dayParam) ? dayParam : undefined;
+  const sortQuery = sort === "activity" ? undefined : sort;
   const userId = session.user.id;
   const [installations, unsortedProjects, latestEvents] = await Promise.all([
     db.installation.findMany({ where: { userId } }),
@@ -56,8 +60,21 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
 
       {/* Loads from GitHub on its own, so the projects don't wait for it. */}
       <Suspense fallback={<GitHubActivitySkeleton />}>
-        <GitHubActivity userId={userId} />
+        <GitHubActivity userId={userId} selectedDay={selectedDay} sort={sortQuery} />
       </Suspense>
+
+      {selectedDay && (
+        <Suspense
+          key={selectedDay}
+          fallback={<div aria-hidden className="glass h-48 animate-pulse rounded-3xl" />}
+        >
+          <DayDetail
+            userId={userId}
+            day={selectedDay}
+            closeHref={sortQuery ? `/dashboard?sort=${sortQuery}` : "/dashboard"}
+          />
+        </Suspense>
+      )}
 
       {connected && (
         <p className="glass rounded-2xl border-green-400/40 p-3 text-sm">

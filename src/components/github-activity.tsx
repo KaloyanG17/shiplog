@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getContributions, type ContributionLevel } from "@/lib/contributions";
 
 // Shiplog's palette instead of GitHub's greens: quiet teal for light days,
@@ -25,8 +26,26 @@ const longDate = (date: string) =>
 
 // The past year of GitHub contributions as a heatmap, plus the repos with the
 // most commits. Reads from GitHub, so render it inside <Suspense>.
-export async function GitHubActivity({ userId }: { userId: string }) {
+export async function GitHubActivity({
+  userId,
+  selectedDay,
+  sort,
+}: {
+  userId: string;
+  selectedDay?: string;
+  sort?: string;
+}) {
   const data = await getContributions(userId);
+
+  // Clicking a day selects it; clicking it again closes the panel. Keeps the
+  // current project sort in the URL.
+  const dayHref = (date: string, selected: boolean) => {
+    const params = new URLSearchParams();
+    if (sort) params.set("sort", sort);
+    if (!selected) params.set("day", date);
+    const query = params.toString();
+    return query ? `/dashboard?${query}` : "/dashboard";
+  };
 
   if (!data.ok) {
     const message =
@@ -55,6 +74,7 @@ export async function GitHubActivity({ userId }: { userId: string }) {
         <h2 id="activity-title" className="font-semibold">
           {data.total.toLocaleString("en-GB")} contributions{" "}
           <span className="font-serif text-xl font-normal italic">in the last year</span>
+          <span className="ml-2 text-xs font-normal text-white/60">Click a day to see what you did.</span>
         </h2>
         <a
           href={`https://github.com/${data.login}`}
@@ -66,11 +86,7 @@ export async function GitHubActivity({ userId }: { userId: string }) {
 
       {/* Scrolls sideways on small screens; most recent weeks are on the right. */}
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
-        <div
-          role="img"
-          aria-label={`Contribution heatmap: ${data.total} contributions over the last year.`}
-          className="flex min-w-max flex-col gap-1.5 sm:min-w-0"
-        >
+        <div className="flex min-w-max flex-col gap-1.5 sm:min-w-0">
           <div aria-hidden className="grid gap-[3px] text-[10px] text-white/60" style={columns}>
             {monthLabels.map((label, i) => (
               <span key={i} className="overflow-visible whitespace-nowrap">
@@ -78,17 +94,28 @@ export async function GitHubActivity({ userId }: { userId: string }) {
               </span>
             ))}
           </div>
-          <div aria-hidden className="grid gap-[3px]" style={columns}>
+          <div className="grid gap-[3px]" style={columns}>
             {data.weeks.map((week) => (
               <div key={week[0].date} className="grid grid-rows-7 gap-[3px]">
-                {week.map((day) => (
-                  <span
-                    key={day.date}
-                    title={`${day.contributionCount} contribution${day.contributionCount === 1 ? "" : "s"} on ${longDate(day.date)}`}
-                    style={{ gridRowStart: day.weekday + 1 }}
-                    className={`aspect-square w-full rounded-[3px] ${LEVEL_CLASS[day.contributionLevel]}`}
-                  />
-                ))}
+                {week.map((day) => {
+                  const label = `${day.contributionCount} contribution${day.contributionCount === 1 ? "" : "s"} on ${longDate(day.date)}`;
+                  const selected = day.date === selectedDay;
+                  return (
+                    // Each day opens its detail panel below (projects + journal).
+                    <Link
+                      key={day.date}
+                      href={dayHref(day.date, selected)}
+                      scroll={false}
+                      title={label}
+                      aria-label={selected ? `${label}, selected` : label}
+                      aria-current={selected ? "date" : undefined}
+                      style={{ gridRowStart: day.weekday + 1 }}
+                      className={`aspect-square w-full rounded-[3px] transition-transform hover:scale-125 focus-visible:outline-2 focus-visible:outline-white ${LEVEL_CLASS[day.contributionLevel]} ${
+                        selected ? "scale-125 ring-2 ring-white" : ""
+                      }`}
+                    />
+                  );
+                })}
               </div>
             ))}
           </div>
