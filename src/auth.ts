@@ -12,6 +12,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/login",
   },
+  events: {
+    // The Prisma adapter saves the OAuth token only when the account is first
+    // linked. GitHub issues a new token on every sign-in and can revoke older
+    // ones, so keep the stored token current (the contribution graph uses it).
+    async signIn({ account }) {
+      if (account?.provider !== "github" || !account.access_token) return;
+      await db.account.updateMany({
+        where: { provider: account.provider, providerAccountId: account.providerAccountId },
+        data: {
+          access_token: account.access_token,
+          scope: account.scope,
+          token_type: account.token_type,
+        },
+      });
+    },
+  },
 });
 
 // Use this instead of auth() in Server Components. auth() touches crypto and

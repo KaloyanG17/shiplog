@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { FolderAction, FolderCard, paperFor } from "@/components/folder-card";
+import { GitHubActivity, GitHubActivitySkeleton } from "@/components/github-activity";
 import { db } from "@/lib/db";
 import { getInstallUrl, getManageInstallationUrl } from "@/lib/github";
 import { syncReposAction } from "./actions";
@@ -52,6 +53,11 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
       <h1 className="text-4xl font-black tracking-tight">
         Hi {session.user.name?.split(" ")[0] ?? "there"} 👋
       </h1>
+
+      {/* Loads from GitHub on its own, so the projects don't wait for it. */}
+      <Suspense fallback={<GitHubActivitySkeleton />}>
+        <GitHubActivity userId={userId} />
+      </Suspense>
 
       {connected && (
         <p className="glass rounded-2xl border-green-400/40 p-3 text-sm">
