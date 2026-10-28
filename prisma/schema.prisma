@@ -1,0 +1,204 @@
+// Shiplog database schema.
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth.js models ──────────────────────────────────────────────────────────
+// Shapes required by @auth/prisma-adapter: https://authjs.dev/getting-started/adapters/prisma
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  projects       Project[]
+  installations  Installation[]
+  journalEntries JournalEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ─── Shiplog models ──────────────────────────────────────────────────────────
+
+// A GitHub App installation on the user's account or org.
+// GitHub IDs are BigInt: issue IDs already exceed Postgres' 32-bit Int.
+model Installation {
+  id              String @id @default(cuid())
+  githubInstallId BigInt @unique
+  accountId       BigInt // GitHub user/org the app is installed on
+  accountLogin    String
+  userId          String
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repos           Repo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Repo {
+  id             String        @id @default(cuid())
+  githubRepoId   BigInt        @unique
+  name           String // e.g. "shiplog"
+  fullName       String // e.g. "kaloyan/shiplog"
+  isPrivate      Boolean       @default(false)
+  htmlUrl        String
+  installationId String
+  installation   Installation  @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  cards          Card[]
+  events         GithubEvent[]
+
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique // public URL: /p/<slug>
+  description String?
+  isPublic    Boolean         @default(false)
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repos       Repo[]
+  cards       Card[]
+  changelog   ChangelogItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CardColumn {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+model Card {
+  id                String     @id @default(cuid())
+  title             String
+  description       String? // Markdown
+  column            CardColumn @default(BACKLOG)
+  position          Int        @default(0)
+  projectId         String
+  project           Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // Set when the card mirrors a GitHub issue; null for private to-dos.
+  repoId            String?
+  repo              Repo?      @relation(fields: [repoId], references: [id], onDelete: SetNull)
+  githubIssueId     BigInt?    @unique
+  githubIssueNumber Int?
+  githubUrl         String?
+  // Latest open/merged PR that says it closes this issue ("Fixes #12").
+  linkedPrNumber    Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, column, position])
+  @@index([repoId, githubIssueNumber])
+}
+
+// Raw webhook events: the source material for journal entries.
+model GithubEvent {
+  id         String   @id @default(cuid())
+  deliveryId String   @unique // X-GitHub-Delivery header, makes webhook handling idempotent
+  type       String // push, pull_request, issues, ...
+  action     String?
+  payload    Json
+  repoId     String
+  repo       Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  occurredAt DateTime
+
+  @@index([repoId, occurredAt])
+}
+
+enum EntryStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model JournalEntry {
+  id      String      @id @default(cuid())
+  date    DateTime    @db.Date
+  aiDraft String? // what Claude wrote
+  content String? // the user's edited version
+  status  EntryStatus @default(DRAFT)
+  userId  String
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+enum ChangelogSource {
+  PULL_REQUEST
+  JOURNAL
+  MANUAL
+}
+
+model ChangelogItem {
+  id          String          @id @default(cuid())
+  title       String
+  body        String?
+  source      ChangelogSource
+  projectId   String
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  publishedAt DateTime        @default(now())
+
+  @@index([projectId, publishedAt])
+}

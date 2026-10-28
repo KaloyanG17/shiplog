@@ -1,0 +1,73 @@
+"use server";
+
+import { refresh } from "next/cache";
+import { z } from "zod";
+import { getSession } from "@/auth";
+import { CardColumn } from "@/generated/prisma/enums";
+import { importOpenIssues, nextPosition } from "@/lib/cards";
+import { db } from "@/lib/db";
+
+// Server actions are public endpoints: every one re-checks that the signed-in
+// user owns the project or card it touches.
+async function requireUserId() {
+  const session = await getSession();
+  if (!session?.user?.id) throw new Error("Not signed in");
+  return session.user.id;
+}
+
+async function requireOwnedProject(projectId: string) {
+  const userId = await requireUserId();
+  const project = await db.project.findFirst({ where: { id: projectId, userId } });
+  if (!project) throw new Error("Project not found");
+  return project;
+}
+
+async function requireOwnedCard(cardId: string) {
+  const userId = await requireUserId();
+  const card = await db.card.findFirst({ where: { id: cardId, project: { userId } } });
+  if (!card) throw new Error("Card not found");
+  return card;
+}
+
+const columnSchema = z.enum(CardColumn);
+const titleSchema = z.string().trim().min(1).max(200);
+
+export async function moveCardAction(cardId: string, column: CardColumn) {
+  const card = await requireOwnedCard(cardId);
+  const target = columnSchema.parse(column);
+  if (card.column === target) return;
+
+  await db.card.update({
+    where: { id: card.id },
+    data: { column: target, position: await nextPosition(card.projectId, target) },
+  });
+  refresh();
+}
+
+export async function addCardAction(projectId: string, title: string) {
+  const project = await requireOwnedProject(projectId);
+  await db.card.create({
+    data: {
+      title: titleSchema.parse(title),
+      column: "BACKLOG",
+      position: await nextPosition(project.id, "BACKLOG"),
+      projectId: project.id,
+    },
+  });
+  refresh();
+}
+
+// Only private to-dos can be deleted here; issue cards follow GitHub.
+export async function deleteCardAction(cardId: string) {
+  const card = await requireOwnedCard(cardId);
+  if (card.githubIssueId !== null) throw new Error("Close the issue on GitHub instead");
+  await db.card.delete({ where: { id: card.id } });
+  refresh();
+}
+
+export async function importIssuesAction(projectId: string) {
+  const project = await requireOwnedProject(projectId);
+  const count = await importOpenIssues(project.id);
+  refresh();
+  return count;
+}
