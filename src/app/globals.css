@@ -25,6 +25,34 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Scrollbars: a slim orange-to-teal pill on a clear track. Chrome and Edge
+   ignore ::-webkit-scrollbar once scrollbar-color is set, so the standard
+   properties only go to browsers without the WebKit pseudo-elements. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background: linear-gradient(var(--color-orange-500), var(--color-cyan-500)) padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(var(--color-orange-400), var(--color-cyan-400)) padding-box;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-orange-500) transparent;
+  }
+}
+
 /* Frosted-glass panel that sits on the shader background. */
 @utility glass {
   background-color: rgb(6 12 16 / 0.55);

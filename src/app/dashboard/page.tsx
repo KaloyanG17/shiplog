@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
+import { FolderAction, FolderCard, paperFor } from "@/components/folder-card";
 import { db } from "@/lib/db";
 import { getInstallUrl, getManageInstallationUrl } from "@/lib/github";
 import { syncReposAction } from "./actions";
@@ -76,46 +76,32 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
             repo becomes a project.
           </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {projects.map((project) => (
-              <li
-                key={project.id}
-                className="glass relative rounded-2xl p-4 transition-colors hover:border-white/35 hover:bg-black/40"
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  {/* Stretched link: the whole tile opens the project. */}
-                  <Link
+          <ul className="grid gap-x-5 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => {
+              const repo = project.repos[0];
+              const cards = `${project._count.cards} card${project._count.cards === 1 ? "" : "s"}`;
+              return (
+                <li key={project.id}>
+                  <FolderCard
+                    title={project.name}
+                    meta={repo?.isPrivate ? `${cards} · private` : cards}
+                    description={project.description}
                     href={`/projects/${project.id}`}
-                    className="font-semibold after:absolute after:inset-0 after:rounded-2xl"
+                    paper={paperFor(project.id)}
+                    action={<FolderAction>→</FolderAction>}
                   >
-                    {project.name}
-                  </Link>
-                  <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/75">
-                    {project._count.cards} card{project._count.cards === 1 ? "" : "s"}
-                  </span>
-                </div>
-                {project.description && (
-                  <p className="mt-1 text-sm text-white/80">{project.description}</p>
-                )}
-                <ul className="mt-2 flex flex-col gap-1">
-                  {project.repos.map((repo) => (
-                    <li key={repo.id} className="text-sm text-white/65">
-                      <a href={repo.htmlUrl} className="relative z-10 hover:underline">
+                    {repo && (
+                      <a
+                        href={repo.htmlUrl}
+                        className="relative z-10 mt-1 block truncate font-mono text-xs text-neutral-500 hover:text-neutral-900 hover:underline"
+                      >
                         {repo.fullName}
                       </a>
-                      {repo.isPrivate && (
-                        <span className="ml-2 rounded-full border border-white/25 px-1.5 text-xs">
-                          private
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                  {project.repos.length === 0 && (
-                    <li className="text-sm text-white/60">No repo connected</li>
-                  )}
-                </ul>
-              </li>
-            ))}
+                    )}
+                  </FolderCard>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

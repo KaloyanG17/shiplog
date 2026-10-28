@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="absolute inset-0 bg-black/30" />
         </div>
         <header className="sticky top-0 z-20 border-b border-white/10 bg-black/30 backdrop-blur-md">
-          <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
             <Link href="/" className="font-semibold tracking-tight">
               ⛵ Shiplog
             </Link>
@@ -51,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </Suspense>
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">{children}</main>
       </body>
     </html>
   );
