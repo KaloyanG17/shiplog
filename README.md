@@ -1,7 +1,7 @@
 # ⛵ Shiplog
 
 **A personal dev board that keeps itself up to date from GitHub.**
-Issues become cards, pull requests move them across the board, and every push, issue and PR lands in a project activity feed. That feed is the groundwork for an AI-written dev journal.
+Issues become cards, pull requests move them across the board, every push, issue and PR lands in a project activity feed, and each evening an AI writes up your day in a dev journal.
 
 ![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
@@ -26,7 +26,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 |---|---|---|
 | **Plan** | Kanban board per project; GitHub issues sync in as cards next to private to-dos | ✅ Working |
 | **Code** | Webhooks move cards as you open, review and merge PRs | ✅ Working |
-| **Log** | Activity feed per project; AI-drafted daily journal and weekly summaries | 🟡 Feed working, journal next |
+| **Log** | Activity feed per project; AI-drafted daily journal | ✅ Working (weekly summaries next) |
 | **Share** | Public project page with changelog and an upvotable roadmap | ⏳ Planned |
 
 ## Features
@@ -51,6 +51,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 
 - **Activity feed** in plain English: "merged PR #4: Add login", "pushed 3 commits to main: …".
 - **Live updates:** project pages refresh in the background, so webhook changes appear without a reload.
+- **Daily AI journal:** every evening Gemini turns the day's commits, issues and PRs across all your repos into a short first-person entry. You can edit it to add what GitHub can't see (what you learned, what got you stuck), regenerate it, or write today's entry on demand. Days follow your local time zone, not UTC.
 
 <details>
 <summary><b>Dashboard screenshot</b></summary>
@@ -73,12 +74,16 @@ flowchart LR
   EV --> F[Activity feed]
   GHA[GitHub App API] -- "installation token" --> RP
   GHA -- "open issues import" --> CD
+  CR["Evening cron<br/>/api/cron/journal"] --> J{{"Gemini (free tier)"}}
+  EV --> J
+  J --> JE[(JournalEntry)]
 ```
 
 1. **Login** uses a GitHub OAuth app through Auth.js; sessions live in Postgres via the Prisma adapter.
 2. **Repo access** uses a separate GitHub App with read-only permissions. After installing it, GitHub redirects to `/api/github/setup`, which links the installation to the signed-in user and syncs its repos.
 3. **Webhooks** hit `/api/github/webhook`. The request signature is checked against the raw body, the event is stored, and handlers update repos and cards.
 4. **The board** is a React client component that calls server actions; every action checks that the signed-in user owns the card or project.
+5. **The journal** collects a day's events and asks Gemini for a draft. A cron job (Vercel Cron, protected by `CRON_SECRET`) writes missing entries each evening; the Journal page lets you write, edit and regenerate them.
 
 ## Engineering notes
 
@@ -91,6 +96,9 @@ Decisions worth calling out:
 - **Race-safe syncing:** the setup redirect and the `installation_repositories` webhook can add the same repo at the same moment. A project is linked with a conditional update (`projectId IS NULL`), and the losing side deletes its duplicate.
 - **64-bit GitHub IDs:** GitHub issue IDs have already passed the 32-bit integer limit, so all GitHub IDs are stored as `BigInt`.
 - **Next.js 16 Cache Components:** pages prerender a static shell, and anything that reads the session is streamed inside `<Suspense>`. A small `getSession()` helper calls `connection()` before Auth.js, which otherwise touches `crypto` and `Date.now()` during prerendering.
+- **Free-tier AI that degrades gracefully:** the journal runs on Gemini's free tier, whose shared capacity is sometimes busy (`503`) or out of quota (`429`). Instead of the SDK's long built-in retries, each model gets one 30-second attempt and the next free model takes over, so a busy model costs seconds rather than a failed entry.
+- **Prompt-injection-aware prompt:** commit messages and issue titles are user-controlled text. They're wrapped in an `<activity>` block and the system instruction tells the model to treat them strictly as content to summarise.
+- **Time-zone-correct days:** "today" means the developer's calendar day (Europe/Sofia by default), computed with `Intl` and checked across daylight-saving changes, including the 25-hour day in October.
 - **Accessibility:** drag and drop has a keyboard- and touch-friendly dropdown alternative, columns are labelled regions, and controls have screen-reader labels.
 
 ## Tech stack
@@ -102,6 +110,8 @@ Decisions worth calling out:
 | Database | PostgreSQL on [Neon](https://neon.tech), Prisma 7 with the `pg` driver adapter |
 | Auth | Auth.js v5 (GitHub provider, Prisma adapter) |
 | GitHub | GitHub App + Octokit (`@octokit/app`, `@octokit/webhooks`) |
+| AI | Google Gemini API, free tier (`@google/genai`) |
+| Scheduled jobs | Vercel Cron |
 | Validation | Zod |
 | Local webhooks | [smee.io](https://smee.io) tunnel |
 
@@ -111,7 +121,7 @@ Decisions worth calling out:
 - [x] Connect repos through a GitHub App; one project per repo
 - [x] Signed webhook endpoint with event storage
 - [x] Kanban board with issue sync and PR-driven card moves
-- [ ] **Daily AI journal:** Claude drafts an entry from the day's GitHub activity, which you edit and save
+- [x] Daily AI journal: drafted from the day's GitHub activity, editable
 - [ ] Weekly summaries and "export as CV bullets"
 - [ ] Public project page: changelog from merged PRs and published journal entries
 - [ ] Public roadmap with upvotes
@@ -134,6 +144,8 @@ Requires Node.js 20+ and a PostgreSQL database (a local install, or a free one f
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`: create a GitHub OAuth app at
      <https://github.com/settings/developers> with callback URL
      `http://localhost:3000/api/auth/callback/github`
+   - `GEMINI_API_KEY`: a free key from <https://aistudio.google.com/apikey> (on the free tier, Google may use prompts to improve its products)
+   - `CRON_SECRET`: any long random string; it protects the evening journal job
 3. **Create the database tables:**
    ```bash
    npm run db:migrate
@@ -184,6 +196,12 @@ Login uses the OAuth app above. Reading repos uses a separate **GitHub App**, so
 
 After a migration, restart `npm run dev` so it picks up the regenerated Prisma client.
 
+To run the evening journal job by hand (it's scheduled in `vercel.json` when deployed):
+
+```bash
+curl -H "Authorization: Bearer <your CRON_SECRET>" http://localhost:3000/api/cron/journal
+```
+
 ### Project structure
 
 ```
@@ -198,7 +216,9 @@ src/
     login/                   Sign-in page
     dashboard/               Project list, "Sync repos" action
     projects/[id]/           Board (client), server actions, activity feed
+    journal/                 Journal page, entry editor, server actions
     api/auth/                Auth.js routes
+    api/cron/journal/        Evening job that writes missing journal entries
     api/github/setup/        GitHub App install redirect
     api/github/webhook/      Signed webhook endpoint
   lib/
@@ -208,6 +228,8 @@ src/
     webhooks.ts              Webhook verification and event handlers
     cards.ts                 Issue → card sync and PR-driven moves
     activity.ts              Event → one-line summary
+    journal.ts               Day ranges, activity digest, Gemini drafts with model fallback
+vercel.json                  Cron schedule for the journal job
 ```
 
 ---

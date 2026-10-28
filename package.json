@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",
+    "@google/genai": "^2.31.0",
     "@octokit/app": "^16.1.4",
     "@octokit/core": "^7.0.8",
     "@octokit/plugin-paginate-rest": "^15.0.0",

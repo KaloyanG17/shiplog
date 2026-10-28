@@ -173,7 +173,7 @@ enum EntryStatus {
 model JournalEntry {
   id      String      @id @default(cuid())
   date    DateTime    @db.Date
-  aiDraft String? // what Claude wrote
+  aiDraft String? // the AI-written draft
   content String? // the user's edited version
   status  EntryStatus @default(DRAFT)
   userId  String

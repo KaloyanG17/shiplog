@@ -19,6 +19,9 @@ export async function UserMenu() {
       <Link href="/dashboard" className="text-sm font-medium hover:underline">
         Dashboard
       </Link>
+      <Link href="/journal" className="text-sm font-medium hover:underline">
+        Journal
+      </Link>
       {session.user.image && (
         // eslint-disable-next-line @next/next/no-img-element -- small avatar, no need for next/image config
         <img src={session.user.image} alt="" className="h-7 w-7 rounded-full" />
