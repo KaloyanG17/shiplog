@@ -4,7 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { summarizeEvent } from "@/lib/activity";
 import { db } from "@/lib/db";
-import { Board, type BoardCard } from "./board";
+import type { BoardCard } from "./board";
+import { BoardViews } from "./board-views";
 import { AutoRefresh, ImportIssuesButton } from "./client-parts";
 
 export default function ProjectPage({ params }: PageProps<"/projects/[id]">) {
@@ -85,7 +86,7 @@ async function ProjectView({ params }: Pick<PageProps<"/projects/[id]">, "params
             on GitHub: it appears here automatically.
           </p>
         )}
-        <Board projectId={project.id} cards={cards} />
+        <BoardViews projectId={project.id} cards={cards} />
       </section>
 
       <section aria-labelledby="activity-heading" className="flex flex-col gap-3">
