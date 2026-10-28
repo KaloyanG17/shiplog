@@ -27,7 +27,26 @@ function registerHandlers(webhooks: Webhooks) {
   });
   webhooks.on("pull_request", async ({ payload }) => {
     const repo = await findRepo(payload.repository.id);
-    if (repo) await handlePullRequestEvent(repo, payload.action, payload.pull_request);
+    if (!repo) return;
+    await handlePullRequestEvent(repo, payload.action, payload.pull_request);
+
+    // Merged PRs become changelog entries on the project's public page.
+    const pr = payload.pull_request;
+    if (payload.action === "closed" && pr.merged && repo.projectId) {
+      const sourceId = `pr:${repo.id}:${pr.number}`;
+      await db.changelogItem.upsert({
+        where: { sourceId },
+        create: {
+          sourceId,
+          source: "PULL_REQUEST",
+          title: pr.title,
+          url: pr.html_url,
+          projectId: repo.projectId,
+          publishedAt: pr.merged_at ? new Date(pr.merged_at) : new Date(),
+        },
+        update: { title: pr.title },
+      });
+    }
   });
 
   // Repos added to or removed from the installation on GitHub.

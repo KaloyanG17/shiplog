@@ -65,6 +65,32 @@ export async function deleteCardAction(cardId: string) {
   refresh();
 }
 
+export async function setPublicAction(projectId: string, isPublic: boolean) {
+  const project = await requireOwnedProject(projectId);
+  await db.project.update({ where: { id: project.id }, data: { isPublic: z.boolean().parse(isPublic) } });
+  refresh();
+}
+
+const changelogSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  body: z.string().trim().max(2000).optional(),
+});
+
+export async function addChangelogAction(projectId: string, input: { title: string; body?: string }) {
+  const project = await requireOwnedProject(projectId);
+  const { title, body } = changelogSchema.parse(input);
+  await db.changelogItem.create({
+    data: { title, body: body || null, source: "MANUAL", projectId: project.id },
+  });
+  refresh();
+}
+
+export async function deleteChangelogAction(itemId: string) {
+  const userId = await requireUserId();
+  await db.changelogItem.deleteMany({ where: { id: itemId, project: { userId } } });
+  refresh();
+}
+
 export async function importIssuesAction(projectId: string) {
   const project = await requireOwnedProject(projectId);
   const count = await importOpenIssues(project.id);

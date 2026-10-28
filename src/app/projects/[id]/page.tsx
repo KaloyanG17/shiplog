@@ -6,6 +6,7 @@ import { summarizeEvent } from "@/lib/activity";
 import { db } from "@/lib/db";
 import type { BoardCard } from "./board";
 import { BoardViews } from "./board-views";
+import { ChangelogEditor, PublicToggle } from "./sharing";
 import { AutoRefresh, ImportIssuesButton } from "./client-parts";
 
 export default function ProjectPage({ params }: PageProps<"/projects/[id]">) {
@@ -27,11 +28,18 @@ async function ProjectView({ params }: Pick<PageProps<"/projects/[id]">, "params
   });
   if (!project) notFound();
 
-  const events = await db.githubEvent.findMany({
-    where: { repoId: { in: project.repos.map((repo) => repo.id) } },
-    orderBy: { occurredAt: "desc" },
-    take: 20,
-  });
+  const [events, changelog] = await Promise.all([
+    db.githubEvent.findMany({
+      where: { repoId: { in: project.repos.map((repo) => repo.id) } },
+      orderBy: { occurredAt: "desc" },
+      take: 20,
+    }),
+    db.changelogItem.findMany({
+      where: { projectId: project.id },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+    }),
+  ]);
 
   const cards: BoardCard[] = project.cards.map((card) => ({
     id: card.id,
@@ -72,7 +80,15 @@ async function ProjectView({ params }: Pick<PageProps<"/projects/[id]">, "params
               </span>
             </div>
           </div>
-          {project.repos.length > 0 && <ImportIssuesButton projectId={project.id} />}
+          <div className="flex flex-col items-end gap-3">
+            <PublicToggle
+              projectId={project.id}
+              slug={project.slug}
+              isPublic={project.isPublic}
+              hasPrivateRepo={project.repos.some((repo) => repo.isPrivate)}
+            />
+            {project.repos.length > 0 && <ImportIssuesButton projectId={project.id} />}
+          </div>
         </div>
       </header>
 
@@ -87,6 +103,26 @@ async function ProjectView({ params }: Pick<PageProps<"/projects/[id]">, "params
           </p>
         )}
         <BoardViews projectId={project.id} cards={cards} />
+      </section>
+
+      <section aria-labelledby="changelog-heading" className="flex flex-col gap-3">
+        <h2 id="changelog-heading" className="text-lg font-semibold">
+          Changelog
+          <span className="ml-2 text-xs font-normal text-white/60">
+            {project.isPublic ? "Shown on your public page" : "Shown once the public page is on"}
+          </span>
+        </h2>
+        <ChangelogEditor
+          projectId={project.id}
+          items={changelog.map((item) => ({
+            id: item.id,
+            title: item.title,
+            body: item.body,
+            url: item.url,
+            source: item.source,
+            publishedAt: item.publishedAt.toISOString(),
+          }))}
+        />
       </section>
 
       <section aria-labelledby="activity-heading" className="flex flex-col gap-3">

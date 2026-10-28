@@ -128,21 +128,22 @@ enum CardColumn {
 }
 
 model Card {
-  id                String     @id @default(cuid())
+  id                String        @id @default(cuid())
   title             String
   description       String? // Markdown
-  column            CardColumn @default(BACKLOG)
-  position          Int        @default(0)
+  column            CardColumn    @default(BACKLOG)
+  position          Int           @default(0)
   projectId         String
-  project           Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   // Set when the card mirrors a GitHub issue; null for private to-dos.
   repoId            String?
-  repo              Repo?      @relation(fields: [repoId], references: [id], onDelete: SetNull)
-  githubIssueId     BigInt?    @unique
+  repo              Repo?         @relation(fields: [repoId], references: [id], onDelete: SetNull)
+  githubIssueId     BigInt?       @unique
   githubIssueNumber Int?
   githubUrl         String?
   // Latest open/merged PR that says it closes this issue ("Fixes #12").
   linkedPrNumber    Int?
+  votes             RoadmapVote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -196,9 +197,25 @@ model ChangelogItem {
   title       String
   body        String?
   source      ChangelogSource
+  // Where an automatic entry came from, e.g. "pr:<repoId>:<number>", so the
+  // same merged PR is never logged twice. Null for manual entries.
+  sourceId    String?         @unique
+  url         String?
   projectId   String
   project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
   publishedAt DateTime        @default(now())
 
   @@index([projectId, publishedAt])
+}
+
+// One upvote on a public roadmap card. Visitors are anonymous: voterHash is
+// an HMAC of a random cookie value, so it can't be traced back to a person.
+model RoadmapVote {
+  id        String   @id @default(cuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  voterHash String
+  createdAt DateTime @default(now())
+
+  @@unique([cardId, voterHash])
 }
