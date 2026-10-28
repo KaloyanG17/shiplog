@@ -22,9 +22,10 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-  projects       Project[]
-  installations  Installation[]
-  journalEntries JournalEntry[]
+  projects        Project[]
+  installations   Installation[]
+  journalEntries  JournalEntry[]
+  weeklySummaries WeeklySummary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -206,6 +207,20 @@ model ChangelogItem {
   publishedAt DateTime        @default(now())
 
   @@index([projectId, publishedAt])
+}
+
+// AI summary of one week of journal entries, with CV-ready bullets.
+model WeeklySummary {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime @db.Date // Monday of the week, in the journal time zone
+  summary   String
+  bullets   String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, weekStart])
 }
 
 // One upvote on a public roadmap card. Visitors are anonymous: voterHash is

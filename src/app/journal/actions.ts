@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getSession } from "@/auth";
 import { db } from "@/lib/db";
 import { generateJournalDraft, JournalError, localDay } from "@/lib/journal";
+import { generateWeeklySummary } from "@/lib/weekly";
 
 // Errors come back as values: thrown messages are hidden in production builds.
 export type ActionResult = { error?: string; message?: string };
@@ -35,6 +36,19 @@ export async function generateEntryAction(day: string): Promise<ActionResult> {
   } catch (error) {
     if (error instanceof JournalError) return { error: error.message };
     console.error("Journal generation failed:", error);
+    return { error: "Couldn't reach Gemini. Try again in a moment." };
+  }
+}
+
+export async function generateWeeklyAction(): Promise<ActionResult> {
+  const userId = await requireUserId();
+  try {
+    await generateWeeklySummary(userId);
+    refresh();
+    return { message: "Week summarised." };
+  } catch (error) {
+    if (error instanceof JournalError) return { error: error.message };
+    console.error("Weekly summary failed:", error);
     return { error: "Couldn't reach Gemini. Try again in a moment." };
   }
 }

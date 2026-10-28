@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { db } from "@/lib/db";
 import { FolderPanel, paperFor } from "@/components/folder-card";
-import { getDayEvents, JOURNAL_TIME_ZONE, localDay } from "@/lib/journal";
+import { dayToDate, getDayEvents, JOURNAL_TIME_ZONE, localDay } from "@/lib/journal";
+import { addDays, currentWeekStart } from "@/lib/weekly";
+import { WeeklySummary } from "./weekly";
 import { GenerateButton, JournalEntry } from "./entry";
 
 export default function JournalPage() {
@@ -29,16 +31,24 @@ async function Journal() {
   if (!session?.user?.id) redirect("/login");
 
   const today = localDay(new Date());
-  const [entries, todayEvents] = await Promise.all([
+  const weekStart = currentWeekStart();
+  const [entries, todayEvents, weekly] = await Promise.all([
     db.journalEntry.findMany({
       where: { userId: session.user.id },
       orderBy: { date: "desc" },
       take: 30,
     }),
     getDayEvents(session.user.id, today),
+    db.weeklySummary.findUnique({
+      where: { userId_weekStart: { userId: session.user.id, weekStart: dayToDate(weekStart) } },
+    }),
   ]);
   const todayEntry = entries.find((entry) => entry.date.toISOString().slice(0, 10) === today);
   const pastEntries = entries.filter((entry) => entry !== todayEntry);
+  const weekEntryCount = entries.filter((entry) => {
+    const day = entry.date.toISOString().slice(0, 10);
+    return day >= weekStart && day <= addDays(weekStart, 6) && (entry.content ?? entry.aiDraft);
+  }).length;
 
   return (
     <div className="flex flex-col gap-8">
@@ -53,6 +63,18 @@ async function Journal() {
           never sent to Gemini.
         </p>
       </header>
+
+      <section aria-labelledby="week-heading" className="flex flex-col gap-3">
+        <h2 id="week-heading" className="text-lg font-semibold">
+          This week
+        </h2>
+        <WeeklySummary
+          weekLabel={formatDay(dayToDate(weekStart)).replace(/^\w+, /, "")}
+          summary={weekly?.summary ?? null}
+          bullets={weekly?.bullets ?? []}
+          entryCount={weekEntryCount}
+        />
+      </section>
 
       <section aria-labelledby="today-heading" className="flex flex-col gap-3">
         <h2 id="today-heading" className="text-lg font-semibold">

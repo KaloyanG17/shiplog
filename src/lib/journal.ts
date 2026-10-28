@@ -125,20 +125,26 @@ function formatActivity(events: DayEvent[]) {
     .join("\n");
 }
 
-async function writeDraft(day: string, events: DayEvent[]) {
-  const input = `Write my journal entry for ${day}.\n\n<activity>\n${formatActivity(events)}\n</activity>`;
+function writeDraft(day: string, events: DayEvent[]) {
+  return geminiText(
+    SYSTEM_PROMPT,
+    `Write my journal entry for ${day}.\n\n<activity>\n${formatActivity(events)}\n</activity>`,
+  );
+}
 
+// One Gemini request, trying the free models in order (see MODELS).
+export async function geminiText(systemInstruction: string, input: string) {
   for (const model of MODELS) {
     try {
       const interaction = await getClient().interactions.create(
-        { model, system_instruction: SYSTEM_PROMPT, input },
+        { model, system_instruction: systemInstruction, input },
         // Fail fast and fall through to the next model instead of the SDK's
         // own retries, which can keep a busy model waiting for 30+ seconds.
         { retries: { strategy: "none" }, timeout_ms: 30_000 },
       );
       const text = interaction.output_text?.trim();
       if (text) return text;
-      console.warn(`Gemini ${model} returned an empty entry; trying the next model.`);
+      console.warn(`Gemini ${model} returned nothing; trying the next model.`);
     } catch (error) {
       if ([400, 401, 403].includes(errorStatus(error))) {
         throw new JournalError("Gemini rejected the request. Check GEMINI_API_KEY in .env.");
