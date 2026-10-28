@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { FolderAction, FolderCard } from "@/components/folder-card";
 import { HomeCta, HomeCtaPlaceholder } from "@/components/home-cta";
+import { HomeSea } from "@/components/home-sea";
 
 const steps = [
   { title: "Plan", text: "Issues become cards" },
@@ -14,7 +15,7 @@ export default function Home() {
     // On wide screens everything fits in one viewport: hero left, steps right.
     // The height is the viewport minus the header (3.5rem + 1px border) and
     // main's padding (3rem).
-    <div className="grid items-center gap-10 text-white lg:min-h-[calc(100svh-6.5rem-1px)] lg:grid-cols-[1.15fr_1fr]">
+    <div className="relative isolate grid items-center gap-10 text-white lg:min-h-[calc(100svh-6.5rem-1px)] lg:grid-cols-[1.15fr_1fr]">
       <section className="flex flex-col gap-5">
         <p className="w-fit rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur">
           ✨ New: an AI-written dev journal
@@ -41,6 +42,11 @@ export default function Home() {
             See how it works
           </a>
         </div>
+
+        {/* The sea strip along the bottom of the page, plus its caption. */}
+        <Suspense fallback={null}>
+          <HomeSea />
+        </Suspense>
       </section>
 
       <section id="how-it-works" aria-labelledby="how-heading" className="relative flex scroll-mt-20 flex-col gap-3">
