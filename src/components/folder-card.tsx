@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Tilt } from "@/components/tilt";
 
 // Colourful "papers" peeking out of the folder, in the background's palette.
 const PAPERS = [
@@ -46,21 +47,22 @@ export function FolderCard({
   className = "h-60",
 }: FolderCardProps) {
   return (
-    <article className={`group relative isolate ${className}`}>
+    <Tilt className={className}>
+    <article className="group relative h-full [transform-style:preserve-3d]">
       {/* Back of the folder, with its tab on the right. */}
       <div aria-hidden className="absolute inset-x-0 top-5 bottom-0 rounded-3xl bg-white/25 backdrop-blur-md" />
       <div aria-hidden className="absolute top-0 right-6 h-6 w-2/5 rounded-t-2xl bg-white/25 backdrop-blur-md" />
 
-      {/* The paper inside. */}
+      {/* The paper inside: on hover it rises and comes forward in depth. */}
       <div
         aria-hidden
-        className={`absolute inset-x-3 top-7 bottom-10 overflow-hidden rounded-2xl bg-gradient-to-br ${PAPERS[paper % PAPERS.length]} transition-transform duration-300 ease-out group-hover:-translate-y-3 motion-reduce:transition-none`}
+        className={`absolute inset-x-3 top-7 bottom-10 overflow-hidden rounded-2xl bg-gradient-to-br ${PAPERS[paper % PAPERS.length]} transition-transform duration-300 ease-out [transform:translateZ(4px)] group-hover:[transform:translateY(-16px)_translateZ(6px)] motion-reduce:transition-none`}
       >
         <div className="absolute inset-0 bg-[repeating-linear-gradient(115deg,rgb(255_255_255/0.22)_0_5px,transparent_5px_22px)]" />
       </div>
 
-      {/* Front pocket, with its own small tab on the left. */}
-      <div className="absolute inset-x-0 bottom-0 h-[62%] transition-transform duration-300 ease-out group-hover:translate-y-1.5 motion-reduce:transition-none">
+      {/* Front pocket, with its own small tab on the left, floating in front. */}
+      <div className="absolute inset-x-0 bottom-0 h-[62%] transition-transform duration-300 ease-out [transform:translateZ(10px)] group-hover:[transform:translateY(6px)_translateZ(18px)] motion-reduce:transition-none">
         <div aria-hidden className="absolute -top-4 left-0 h-6 w-2/5 rounded-t-2xl bg-white/80 backdrop-blur-xl" />
         <div className="relative flex h-full flex-col justify-end gap-1 rounded-3xl rounded-tl-none bg-white/80 p-5 text-neutral-900 shadow-xl shadow-black/20 backdrop-blur-xl">
           <div className="flex items-end justify-between gap-3">
@@ -91,6 +93,7 @@ export function FolderCard({
         />
       )}
     </article>
+    </Tilt>
   );
 }
 

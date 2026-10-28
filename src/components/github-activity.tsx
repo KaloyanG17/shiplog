@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ActivityViews } from "@/components/activity-views";
 import { getContributions, type ContributionLevel } from "@/lib/contributions";
 
 // Shiplog's palette instead of GitHub's greens: quiet teal for light days,
@@ -84,7 +85,12 @@ export async function GitHubActivity({
         </a>
       </header>
 
-      {/* Scrolls sideways on small screens; most recent weeks are on the right. */}
+      <ActivityViews
+        weeks={data.weeks}
+        selectedDay={selectedDay}
+        sort={sort}
+        heatmap={
+      // Scrolls sideways on small screens; most recent weeks are on the right.
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
         <div className="flex min-w-max flex-col gap-1.5 sm:min-w-0">
           <div aria-hidden className="grid gap-[3px] text-[10px] text-white/60" style={columns}>
@@ -121,6 +127,8 @@ export async function GitHubActivity({
           </div>
         </div>
       </div>
+        }
+      />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <details className="group/top min-w-0 flex-1 rounded-2xl border border-white/15 bg-black/25">
