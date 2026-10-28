@@ -94,6 +94,37 @@ export function FolderCard({
   );
 }
 
+// The same folder look for content of any length (e.g. a journal entry): the
+// pocket grows with its content and the paper peeks out above it.
+export function FolderPanel({
+  paper = 0,
+  children,
+  className = "",
+}: {
+  paper?: number;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <article className={`group relative isolate pt-16 ${className}`}>
+      <div aria-hidden className="absolute inset-x-0 top-5 bottom-0 rounded-3xl bg-white/25 backdrop-blur-md" />
+      <div aria-hidden className="absolute top-0 right-6 h-6 w-2/5 rounded-t-2xl bg-white/25 backdrop-blur-md" />
+      <div
+        aria-hidden
+        className={`absolute inset-x-3 top-7 bottom-6 overflow-hidden rounded-2xl bg-gradient-to-br ${PAPERS[paper % PAPERS.length]} transition-transform duration-300 ease-out group-hover:-translate-y-2 motion-reduce:transition-none`}
+      >
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(115deg,rgb(255_255_255/0.22)_0_5px,transparent_5px_22px)]" />
+      </div>
+      <div className="relative">
+        <div aria-hidden className="absolute -top-4 left-0 h-6 w-2/5 rounded-t-2xl bg-white/85 backdrop-blur-xl" />
+        <div className="relative rounded-3xl rounded-tl-none bg-white/85 p-5 text-neutral-900 shadow-xl shadow-black/20 backdrop-blur-xl sm:p-6">
+          {children}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 // Round dark button like the folder's "+" in the original design. Decorative:
 // the whole folder is already the link.
 export function FolderAction({ children }: { children: ReactNode }) {

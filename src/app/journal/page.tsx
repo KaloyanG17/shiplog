@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { db } from "@/lib/db";
+import { FolderPanel, paperFor } from "@/components/folder-card";
 import { getDayEvents, JOURNAL_TIME_ZONE, localDay } from "@/lib/journal";
 import { GenerateButton, JournalEntry } from "./entry";
 
@@ -70,14 +71,14 @@ async function Journal() {
             edited={todayEntry.content !== null}
           />
         ) : (
-          <div className="glass flex flex-col gap-3 rounded-2xl p-5">
-            <p className="text-sm text-white/80">
+          <FolderPanel paper={paperFor(today)}>
+            <p className="mb-3 text-sm text-neutral-700">
               {todayEvents.length === 0
                 ? "Nothing in your public repos yet today. Push, open an issue or a PR, and there will be something to write about."
                 : "No entry yet. One is written automatically each evening, or write it now."}
             </p>
             <GenerateButton day={today} disabled={todayEvents.length === 0} />
-          </div>
+          </FolderPanel>
         )}
       </section>
 
@@ -86,7 +87,9 @@ async function Journal() {
           Earlier
         </h2>
         {pastEntries.length === 0 ? (
-          <p className="glass rounded-2xl p-4 text-sm text-white/75">Past entries will appear here.</p>
+          <FolderPanel paper={1}>
+            <p className="text-sm text-neutral-700">Past entries will appear here.</p>
+          </FolderPanel>
         ) : (
           pastEntries.map((entry) => (
             <JournalEntry
