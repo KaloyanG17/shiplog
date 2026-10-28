@@ -1,136 +1,126 @@
-# Shiplog (working name)
+# ⛵ Shiplog
 
-> **Plan → Code → Log → Share.** A personal dev board that watches your GitHub, writes your work journal for you, and turns finished work into a public roadmap and changelog.
+**A personal dev board that keeps itself up to date from GitHub.**
+Issues become cards, pull requests move them across the board, and every push, issue and PR lands in a project activity feed. That feed is the groundwork for an AI-written dev journal.
 
-**Status:** 🚧 Starter project set up: Next.js, Tailwind, Prisma + Postgres, GitHub login. See [Getting started](#getting-started).
+![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)
+![Prisma 7](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169e1?logo=postgresql&logoColor=white)
+![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)
+
+![Shiplog project board: five columns of cards and a recent-activity feed](docs/screenshots/board.png)
+
+*Shiplog's own board, tracking Shiplog's roadmap. The activity feed shows the push of this repo's first commit, received by webhook.*
 
 ---
 
-## The problem
+## Why
 
-As a solo developer I:
+As a solo developer my tasks lived in one place, my code in GitHub, and my notes nowhere. When it was time for a standup, a review or a CV update, I couldn't remember what I'd shipped. Shiplog uses GitHub activity as the source of truth, so the board and the history keep themselves current.
 
-- keep tasks in one place, code in GitHub, and notes somewhere else (or nowhere)
-- forget what I did last week when it's time for a standup, a review or updating my CV
-- rarely share progress on side projects, because writing changelogs and updates takes time
+**The loop:** Plan → Code → Log → Share
 
-## The idea
+| Step | What Shiplog does | Status |
+|---|---|---|
+| **Plan** | Kanban board per project; GitHub issues sync in as cards next to private to-dos | ✅ Working |
+| **Code** | Webhooks move cards as you open, review and merge PRs | ✅ Working |
+| **Log** | Activity feed per project; AI-drafted daily journal and weekly summaries | 🟡 Feed working, journal next |
+| **Share** | Public project page with changelog and an upvotable roadmap | ⏳ Planned |
 
-One app that closes the loop, using GitHub activity as the source of truth:
+## Features
 
+- **Sign in with GitHub** (Auth.js), with sessions stored in PostgreSQL.
+- **Connect repos with a GitHub App.** You pick exactly which repos Shiplog can read, and each repo becomes a project. Repos added or removed on GitHub are synced automatically.
+- **Kanban board per project:** Backlog → To do → In progress → In review → Done.
+  - Drag and drop, plus a "Move to" dropdown for keyboard and touch users.
+  - Optimistic updates: moves appear instantly and are saved in the background.
+  - Private to-dos sit next to issue cards; import a repo's open issues in one click.
+- **Cards follow GitHub automatically:**
+
+  | On GitHub | On the board |
+  |---|---|
+  | Issue opened | New card in **Backlog** |
+  | Draft PR with `Fixes #12` | Card #12 → **In progress** |
+  | PR ready for review | **In review** |
+  | PR merged / issue closed | **Done** |
+  | PR closed without merging | Back to **In progress** |
+  | Issue reopened | **To do** |
+  | Issue edited / deleted | Card updated / removed |
+
+- **Activity feed** in plain English: "merged PR #4: Add login", "pushed 3 commits to main: …".
+- **Live updates:** project pages refresh in the background, so webhook changes appear without a reload.
+
+<details>
+<summary><b>Dashboard screenshot</b></summary>
+
+![Shiplog dashboard listing connected GitHub repos as projects with card counts](docs/screenshots/dashboard.png)
+
+</details>
+
+## How it works
+
+```mermaid
+flowchart LR
+  GH[GitHub] -- "signed webhook<br/>(issues, pull_request, push)" --> WH["/api/github/webhook"]
+  WH -- verify HMAC-SHA256 --> H{handlers}
+  H --> EV[(GithubEvent)]
+  H --> CD[(Card)]
+  H --> RP[(Repo / Project)]
+  U[You] -- "server actions<br/>(move, add, delete)" --> CD
+  CD --> B[Board page]
+  EV --> F[Activity feed]
+  GHA[GitHub App API] -- "installation token" --> RP
+  GHA -- "open issues import" --> CD
 ```
-   ┌────────────┐     ┌────────────┐     ┌────────────┐     ┌────────────┐
-   │  1. PLAN   │ ──▶ │  2. CODE   │ ──▶ │  3. LOG    │ ──▶ │  4. SHARE  │
-   │ Kanban     │     │ GitHub     │     │ AI journal │     │ Public     │
-   │ board      │     │ (as usual) │     │ & summary  │     │ roadmap +  │
-   └────────────┘     └────────────┘     └────────────┘     │ changelog  │
-         ▲                                                  └─────┬──────┘
-         └──────────── feedback & votes feed back into planning ──┘
-```
 
-### 1. Plan: personal kanban board
-- Board per project with columns (Backlog → To do → In progress → In review → Done)
-- GitHub issues sync in as cards; private to-dos can sit next to them
-- Drag and drop, labels, Markdown descriptions
+1. **Login** uses a GitHub OAuth app through Auth.js; sessions live in Postgres via the Prisma adapter.
+2. **Repo access** uses a separate GitHub App with read-only permissions. After installing it, GitHub redirects to `/api/github/setup`, which links the installation to the signed-in user and syncs its repos.
+3. **Webhooks** hit `/api/github/webhook`. The request signature is checked against the raw body, the event is stored, and handlers update repos and cards.
+4. **The board** is a React client component that calls server actions; every action checks that the signed-in user owns the card or project.
 
-### 2. Code: GitHub drives the board
-- Work in GitHub as normal; webhooks update the board automatically:
-  - PR opened that references an issue → card moves to **In review**
-  - PR merged / issue closed → card moves to **Done**
-- Commits, PRs and issues are stored as events for the journal
+## Engineering notes
 
-### 3. Log: auto-written dev journal
-- Every evening the day's GitHub activity is collected and Claude writes a **draft journal entry** (what I worked on, what shipped, what's still open)
-- I can edit, add notes ("got stuck on X", "learned Y") and save it
-- **Weekly summary** for standups, performance reviews or CV bullet points
-- Full-text search across all entries
+Decisions worth calling out:
 
-### 4. Share: public project page
-- Each project can be made public at `/p/<project-slug>`
-- **Changelog** made from merged PRs and published journal entries
-- **Public roadmap** showing planned cards; visitors can upvote features
-- Votes and feedback flow back into the board → back to step 1
+- **Webhook security:** every delivery is verified with `X-Hub-Signature-256` (HMAC-SHA256 of the *raw* body) before anything is parsed. Bad signatures get `401`, and handler failures return `500` so GitHub marks the delivery as failed and it can be redelivered.
+- **Idempotent event storage:** GitHub can deliver an event more than once. The `X-GitHub-Delivery` ID is a unique column, so duplicates are skipped instead of double-counted.
+- **Installation ownership check:** the `installation_id` in the setup redirect comes from the query string, so anyone could send one. Shiplog fetches the installation with an app JWT and only accepts it if its GitHub account matches the signed-in user's.
+- **Authorisation in server actions:** server actions are public HTTP endpoints, so each one re-checks ownership of the card or project it touches, and validates input with Zod.
+- **Race-safe syncing:** the setup redirect and the `installation_repositories` webhook can add the same repo at the same moment. A project is linked with a conditional update (`projectId IS NULL`), and the losing side deletes its duplicate.
+- **64-bit GitHub IDs:** GitHub issue IDs have already passed the 32-bit integer limit, so all GitHub IDs are stored as `BigInt`.
+- **Next.js 16 Cache Components:** pages prerender a static shell, and anything that reads the session is streamed inside `<Suspense>`. A small `getSession()` helper calls `connection()` before Auth.js, which otherwise touches `crypto` and `Date.now()` during prerendering.
+- **Accessibility:** drag and drop has a keyboard- and touch-friendly dropdown alternative, columns are labelled regions, and controls have screen-reader labels.
 
----
-
-## Scope
-
-### MVP (v1): finish this first
-- [ ] Sign in with GitHub; install the GitHub App on chosen repos
-- [ ] Board per repo, with issue → card sync
-- [ ] Webhooks that move cards on PR / issue events
-- [ ] Daily AI journal draft that I can edit and save
-- [ ] Public changelog page per project
-
-### Later (v2+)
-- [ ] Public roadmap with upvotes
-- [ ] Weekly / monthly summaries and "export as CV bullets"
-- [ ] Multiple repos per project
-- [ ] Pomodoro timer per card + focus stats (heatmap, estimate vs actual)
-- [ ] Split the API out into a NestJS service in an Nx monorepo
-- [ ] Mobile app (Ionic/Capacitor or React Native)
-
----
-
-## Planned tech stack
+## Tech stack
 
 | Area | Choice |
 |---|---|
-| Language | TypeScript everywhere |
-| Framework | Next.js (App Router): React UI, API routes, server-rendered public pages |
-| Styling | Tailwind CSS |
-| State | Zustand (client), Server Components / Server Actions |
-| Database | PostgreSQL (Neon or Supabase) + Prisma |
-| Auth | Auth.js with GitHub |
-| GitHub | GitHub App (per-repo permissions + webhooks) via Octokit |
-| AI | Claude API for journal drafts and summaries |
-| Scheduled jobs | Vercel Cron (daily summary job) |
+| Framework | Next.js 16 (App Router, Server Components, Server Actions, Cache Components) |
+| Language / UI | TypeScript, React 19, Tailwind CSS 4 |
+| Database | PostgreSQL on [Neon](https://neon.tech), Prisma 7 with the `pg` driver adapter |
+| Auth | Auth.js v5 (GitHub provider, Prisma adapter) |
+| GitHub | GitHub App + Octokit (`@octokit/app`, `@octokit/webhooks`) |
 | Validation | Zod |
-| Testing | Vitest (unit), Playwright (end-to-end) |
-| CI/CD | GitHub Actions → deploy on Vercel |
+| Local webhooks | [smee.io](https://smee.io) tunnel |
 
-## Architecture (first draft)
+## Roadmap
 
-```
-GitHub ──webhook──▶ /api/github/webhook ──▶ check signature ──▶ save GithubEvent
-                                                     │
-                                                     └──▶ update Card column
-
-Vercel Cron (daily) ──▶ /api/cron/journal ──▶ group the day's events per user
-                                                 ──▶ Claude API ──▶ JournalEntry (draft)
-
-Browser ──▶ Next.js app (private: board, journal)
-Visitors ──▶ /p/<slug> (public, server-rendered: changelog, roadmap)
-```
-
-## Data model (first pass)
-
-| Model | Key fields |
-|---|---|
-| `User` | id, githubId, name, email |
-| `Installation` | GitHub App installation id, userId |
-| `Repo` | githubRepoId, fullName, installationId |
-| `Project` | name, slug, isPublic, repos |
-| `Card` | title, description, column, position, githubIssueId? |
-| `GithubEvent` | type (push / pull_request / issues), payload, repoId, occurredAt |
-| `JournalEntry` | date, aiDraft, content, status (draft / published) |
-| `ChangelogItem` | projectId, title, body, source (PR / journal), publishedAt |
-| `RoadmapVote` *(v2)* | cardId, voterHash, createdAt |
+- [x] GitHub login (Auth.js + Prisma)
+- [x] Connect repos through a GitHub App; one project per repo
+- [x] Signed webhook endpoint with event storage
+- [x] Kanban board with issue sync and PR-driven card moves
+- [ ] **Daily AI journal:** Claude drafts an entry from the day's GitHub activity, which you edit and save
+- [ ] Weekly summaries and "export as CV bullets"
+- [ ] Public project page: changelog from merged PRs and published journal entries
+- [ ] Public roadmap with upvotes
+- [ ] Automated tests (Vitest, Playwright) and CI on GitHub Actions
+- [ ] Deploy to Vercel
 
 ---
 
-## What this project shows (for my CV)
-
-- **TypeScript full-stack** with Next.js and React
-- **Third-party integrations:** GitHub App, OAuth, REST API, verified webhooks
-- **Keeping two systems in sync** (GitHub ⇄ board)
-- **Background / scheduled jobs**
-- **Practical AI feature** using the Claude API
-- **Public vs private access** to the same data, SEO-friendly server rendering
-- **Relational data modelling** with PostgreSQL + Prisma
-- **Automated testing and CI/CD** (Vitest, Playwright, GitHub Actions)
-
-## Getting started
+## Running it locally
 
 Requires Node.js 20+ and a PostgreSQL database (a local install, or a free one from [Neon](https://neon.tech) or [Supabase](https://supabase.com)).
 
@@ -139,21 +129,25 @@ Requires Node.js 20+ and a PostgreSQL database (a local install, or a free one f
    npm install
    ```
 2. **Create `.env`** by copying `.env.example`, then fill it in:
-   - `DATABASE_URL`: your Postgres connection string
+   - `DATABASE_URL`: your Postgres connection string (for Neon, use the direct, non-pooled one)
    - `AUTH_SECRET`: generate one with `npx auth secret`
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`: create a GitHub OAuth app at
      <https://github.com/settings/developers> with callback URL
      `http://localhost:3000/api/auth/callback/github`
 3. **Create the database tables:**
    ```bash
-   npm run db:migrate -- --name init
+   npm run db:migrate
    ```
-4. **Start the app** and open <http://localhost:3000>:
+4. **Set up the GitHub App and webhooks** (below).
+5. **Start the app** and the webhook tunnel in two terminals, then open <http://localhost:3000>:
    ```bash
    npm run dev
    ```
+   ```bash
+   npm run webhooks:dev
+   ```
 
-### GitHub App (for connecting repos)
+### GitHub App
 
 Login uses the OAuth app above. Reading repos uses a separate **GitHub App**, so you choose exactly which repos Shiplog can see.
 
@@ -164,75 +158,58 @@ Login uses the OAuth app above. Reading repos uses a separate **GitHub App**, so
    | Homepage URL | `http://localhost:3000` |
    | Callback URL / "Request user authorization during installation" | leave empty / unticked |
    | Setup URL | `http://localhost:3000/api/github/setup`, and tick **Redirect on update** |
-   | Webhook → Active | **untick** for now (webhooks come in a later feature) |
+   | Webhook → Active | ticked |
+   | Webhook URL | your `SMEE_URL` (run `npm run webhooks:dev` once to get a channel) |
+   | Webhook secret | the same value as `GITHUB_WEBHOOK_SECRET` in `.env` |
    | Repository permissions | Contents, Issues, Pull requests: **Read-only** (Metadata is added automatically) |
+   | Subscribe to events | Issues, Pull request, Push |
    | Where can this GitHub App be installed? | Only on this account |
 2. After creating it, note the **App ID** and the **slug** (the end of the app's public URL, `github.com/apps/<slug>`).
 3. Under **Private keys**, click **Generate a private key**. A `.pem` file downloads.
 4. Fill in `GITHUB_APP_ID`, `GITHUB_APP_SLUG` and `GITHUB_APP_PRIVATE_KEY` in `.env`. The key must be on one line with each line break written as `\n`.
-5. Restart `npm run dev`, open the dashboard and click **Connect GitHub repos**.
+5. Open the dashboard and click **Connect GitHub repos**.
 
-### Webhooks (GitHub → Shiplog)
-
-GitHub can't reach `localhost`, so in development webhooks go through a [smee.io](https://smee.io) channel. `npm run webhooks:dev` forwards them to `/api/github/webhook`.
-
-1. Set `GITHUB_WEBHOOK_SECRET` and `SMEE_URL` in `.env` (see `.env.example`).
-2. In the GitHub App settings (<https://github.com/settings/apps> → your app → **General**):
-   - **Webhook → Active:** ticked
-   - **Webhook URL:** your `SMEE_URL`
-   - **Webhook secret:** the same value as `GITHUB_WEBHOOK_SECRET`
-3. Under **Permissions & events → Subscribe to events**, tick **Issues**, **Pull request** and **Push**. Installation events are always sent.
-4. Run the app and the tunnel in two terminals:
-   ```bash
-   npm run dev
-   ```
-   ```bash
-   npm run webhooks:dev
-   ```
-
-What happens to each event:
-| Event | Effect |
-|---|---|
-| `issues`, `pull_request`, `push` | Saved to `GithubEvent` for the repo (duplicate deliveries are ignored) |
-| `installation_repositories` | Repos added/removed on GitHub are added/removed in Shiplog |
-| `installation.deleted` | The installation and its repos are removed |
-
-Requests without a valid `X-Hub-Signature-256` get `401`. Recent deliveries (and a **Redeliver** button) are in the app settings under **Advanced**.
-
-> smee.io channels are public: anyone with the URL can watch the events passing through. Fine for development; in production GitHub calls your deployed URL directly.
+> smee.io channels are public: anyone with the URL can watch the events passing through. That's fine for development; in production GitHub calls the deployed URL directly.
 
 ### Scripts
 
 | Command | What it does |
 |---|---|
 | `npm run dev` | Start the dev server |
+| `npm run webhooks:dev` | Forward GitHub webhooks from smee.io to the dev server |
 | `npm run build` / `npm start` | Production build / run it |
 | `npm run lint` / `npm run typecheck` | ESLint / TypeScript checks |
-| `npm run db:migrate` | Create and apply a database migration after changing `prisma/schema.prisma` |
+| `npm run db:migrate` | Create and apply a migration after changing `prisma/schema.prisma` |
 | `npm run db:studio` | Browse the database in Prisma Studio |
+
+After a migration, restart `npm run dev` so it picks up the regenerated Prisma client.
 
 ### Project structure
 
 ```
-prisma/schema.prisma        Database models (Auth.js + Shiplog)
-prisma.config.ts            Prisma CLI config (reads DATABASE_URL)
-src/auth.ts                 Auth.js setup: GitHub provider + Prisma adapter
-src/lib/db.ts               Shared Prisma client
-src/app/page.tsx            Landing page
-src/app/login/              Sign-in page
-src/app/dashboard/          Signed-in area (redirects to /login when signed out)
-src/app/api/auth/           Auth.js routes
-src/components/             Sign-in/out buttons, user menu
+prisma/
+  schema.prisma              Database models (Auth.js + Shiplog)
+  migrations/                SQL migrations
+scripts/webhook-tunnel.mjs   smee.io → localhost webhook forwarder
+src/
+  auth.ts                    Auth.js setup + getSession() helper
+  app/
+    page.tsx                 Landing page
+    login/                   Sign-in page
+    dashboard/               Project list, "Sync repos" action
+    projects/[id]/           Board (client), server actions, activity feed
+    api/auth/                Auth.js routes
+    api/github/setup/        GitHub App install redirect
+    api/github/webhook/      Signed webhook endpoint
+  lib/
+    db.ts                    Shared Prisma client
+    github.ts                GitHub App client and links
+    installations.ts         Installation ownership check and repo sync
+    webhooks.ts              Webhook verification and event handlers
+    cards.ts                 Issue → card sync and PR-driven moves
+    activity.ts              Event → one-line summary
 ```
 
-> **Note:** Next.js 16 has Cache Components switched on. Any component that reads the session (`auth()`), cookies or headers must be rendered inside `<Suspense>`, like `UserMenu` in the layout and `Dashboard` in the dashboard page.
+---
 
-## Next steps
-
-1. Write user stories for the MVP features
-2. ~~Create the Next.js project, add Prisma + Postgres, and get GitHub login working~~ ✅
-3. ~~Register the GitHub App and connect repos as projects~~ ✅
-4. ~~Receive webhooks locally (smee.io tunnel) and store them as events~~ ✅
-5. Build the board UI, the issue → card sync and auto-moving cards
-6. Add the daily journal job
-7. Add the public changelog page, deploy, and write tests
+Built by [Kaloyan Gadarov](https://github.com/KaloyanG17).
