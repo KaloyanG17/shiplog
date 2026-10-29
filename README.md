@@ -1,4 +1,4 @@
-# ⛵ Shiplog
+# Shiplog
 
 **A personal dev board that keeps itself up to date from GitHub.**
 Issues become cards, pull requests move them across the board, every push, issue and PR lands in a project activity feed, and each evening an AI writes up your day in a dev journal.
@@ -13,7 +13,7 @@ Issues become cards, pull requests move them across the board, every push, issue
 ![Three.js](https://img.shields.io/badge/Three.js-React_Three_Fiber-000000?logo=threedotjs)
 ![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000000?logo=vercel)
 
-**🔗 Live: [shiplog-silk.vercel.app](https://shiplog-silk.vercel.app)** · **Public roadmap & changelog: [shiplog-silk.vercel.app/p/shiplog](https://shiplog-silk.vercel.app/p/shiplog)** (no sign-in needed)
+**Live: [shiplog-silk.vercel.app](https://shiplog-silk.vercel.app)** · **Public roadmap & changelog: [shiplog-silk.vercel.app/p/shiplog](https://shiplog-silk.vercel.app/p/shiplog)** (no sign-in needed)
 
 ![Shiplog project board: five columns of cards, from Backlog to Done](docs/screenshots/board.jpg)
 
@@ -29,10 +29,10 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 
 | Step | What Shiplog does | Status |
 |---|---|---|
-| **Plan** | Kanban board per project; GitHub issues sync in as cards next to private to-dos | ✅ Working |
-| **Code** | Webhooks move cards as you open, review and merge PRs | ✅ Working |
-| **Log** | Activity feed per project; AI-drafted daily journal; weekly summary with CV bullets | ✅ Working |
-| **Share** | Public project page with an upvotable roadmap and a changelog of merged PRs | ✅ Working |
+| **Plan** | Kanban board per project; GitHub issues sync in as cards next to private to-dos | Working |
+| **Code** | Webhooks move cards as you open, review and merge PRs | Working |
+| **Log** | Activity feed per project; AI-drafted daily journal; weekly summary with CV bullets | Working |
+| **Share** | Public project page with an upvotable roadmap and a changelog of merged PRs | Working |
 
 ## Features
 

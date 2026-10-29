@@ -20,7 +20,7 @@ export function BoardViews({ projectId, cards }: { projectId: string; cards: Boa
         {(
           [
             ["board", "Board"],
-            ["galaxy", "Galaxy 🪐"],
+            ["galaxy", "Galaxy"],
           ] as const
         ).map(([value, label]) => (
           <button

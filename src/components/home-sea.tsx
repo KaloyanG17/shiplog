@@ -34,7 +34,7 @@ export async function HomeSea() {
       </div>
       {events !== null && (
         <p className="text-xs text-white/70">
-          ⛵ {mood}: {events} GitHub event{events === 1 ? "" : "s"} this week. The sea below follows
+          {mood}: {events} GitHub event{events === 1 ? "" : "s"} this week. The sea below follows
           your activity.
         </p>
       )}

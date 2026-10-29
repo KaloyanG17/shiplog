@@ -14,7 +14,6 @@ export default function ExplorePage() {
   return (
     <div className="flex flex-col gap-8 text-white">
       <header className="flex flex-col gap-3">
-        <p className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">⛵ Built in public</p>
         <h1 className="flex flex-wrap items-baseline gap-x-3 leading-none tracking-tight">
           <span className="text-5xl font-black sm:text-6xl">Explore</span>
           <span className="font-serif text-3xl italic sm:text-4xl">what people are shipping</span>

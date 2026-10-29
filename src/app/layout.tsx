@@ -44,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <header className="sticky top-0 z-20 border-b border-white/10 bg-black/30 backdrop-blur-md">
           <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
             <Link href="/" className="font-semibold tracking-tight">
-              ⛵ Shiplog
+              Shiplog
             </Link>
             <Suspense fallback={null}>
               <UserMenu />

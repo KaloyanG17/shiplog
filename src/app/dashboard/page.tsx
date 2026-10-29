@@ -58,7 +58,7 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-4xl font-black tracking-tight">
-        Hi {session.user.name?.split(" ")[0] ?? "there"} 👋
+        Hi {session.user.name?.split(" ")[0] ?? "there"}
       </h1>
 
       {/* Loads from GitHub on its own, so the projects don't wait for it. */}

@@ -64,7 +64,7 @@ export function WeeklySummary({
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={copyBullets} className={darkButton}>
-                {copied ? "Copied ✓" : "Copy bullets"}
+                {copied ? "Copied" : "Copy bullets"}
               </button>
               <button type="button" onClick={generate} disabled={isPending} className={outlineButton}>
                 {isPending ? "Summarising…" : "Regenerate"}

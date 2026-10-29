@@ -84,7 +84,6 @@ async function PublicProject({ params }: Pick<PageProps<"/p/[slug]">, "params">)
         <Link href="/explore" className="w-fit text-sm text-white/75 hover:text-white hover:underline">
           ← All public projects
         </Link>
-        <p className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">⛵ Built in public with Shiplog</p>
         <h1 className="flex flex-wrap items-baseline gap-x-3 leading-none tracking-tight">
           <span className="text-5xl font-black sm:text-6xl">{project.name}</span>
           <span className="font-serif text-3xl italic sm:text-4xl">roadmap &amp; changelog</span>

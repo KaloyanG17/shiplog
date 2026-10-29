@@ -21,7 +21,7 @@ export function HowItWorksVideo() {
   return (
     <>
       <button type="button" onClick={open} className="btn-ghost h-12 gap-2 px-7 text-sm font-semibold">
-        <span aria-hidden>▶</span> See how it works
+        See how it works
       </button>
 
       <dialog
@@ -50,7 +50,7 @@ export function HowItWorksVideo() {
           onClick={close}
           className="absolute -top-11 right-0 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur hover:bg-white/25"
         >
-          Close ✕
+          Close
         </button>
       </dialog>
     </>

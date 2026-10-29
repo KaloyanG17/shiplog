@@ -18,10 +18,6 @@ export default function Home() {
     // main's padding (3rem).
     <div className="relative isolate grid items-center gap-10 text-white lg:min-h-[calc(100svh-6.5rem-1px)] lg:grid-cols-[1.15fr_1fr]">
       <section className="flex flex-col gap-5">
-        <p className="w-fit rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium backdrop-blur">
-          ✨ New: an AI-written dev journal
-        </p>
-
         <h1 className="flex flex-col leading-none tracking-tight">
           <span className="bg-gradient-to-r from-orange-200 via-white to-cyan-200 bg-clip-text text-5xl font-thin text-transparent sm:text-6xl">
             Plan, code,
@@ -66,25 +62,7 @@ export default function Home() {
             </li>
           ))}
         </ol>
-        <LoopBadge />
       </section>
-    </div>
-  );
-}
-
-// Slowly spinning "PLAN · CODE · LOG · SHARE" ring above the step folders.
-function LoopBadge() {
-  return (
-    <div aria-hidden className="absolute -top-14 right-0 hidden size-24 lg:block">
-      <svg viewBox="0 0 100 100" className="size-full animate-[spin_24s_linear_infinite] motion-reduce:animate-none">
-        <defs>
-          <path id="loop-circle" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" />
-        </defs>
-        <text className="fill-white text-[10.5px] font-semibold tracking-[0.2em] uppercase">
-          <textPath href="#loop-circle">Plan · Code · Log · Share ·</textPath>
-        </text>
-      </svg>
-      <span className="absolute inset-0 grid place-items-center text-2xl">⛵</span>
     </div>
   );
 }
