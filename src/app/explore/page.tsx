@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { FolderAction, FolderCard, paperFor } from "@/components/folder-card";
 import { db } from "@/lib/db";
 
@@ -31,6 +32,9 @@ export default function ExplorePage() {
 }
 
 async function PublicProjects() {
+  // Read the list on every request: otherwise it's baked in at build time and
+  // a project made public later wouldn't show until the next deploy.
+  await connection();
   const projects = await db.project.findMany({
     where: { isPublic: true },
     select: {
