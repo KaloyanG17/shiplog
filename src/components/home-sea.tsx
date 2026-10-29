@@ -27,7 +27,8 @@ export async function HomeSea() {
     <>
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-1/2 -z-10 h-44 w-screen -translate-x-1/2 [mask-image:linear-gradient(to_top,black_55%,transparent)]"
+        // -bottom-6 cancels <main>'s bottom padding so the sea reaches the page edge.
+        className="pointer-events-none absolute -bottom-6 left-1/2 -z-10 h-50 w-screen -translate-x-1/2 [mask-image:linear-gradient(to_top,black_55%,transparent)]"
       >
         <Sailboat intensity={intensity} />
       </div>

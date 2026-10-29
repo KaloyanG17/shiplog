@@ -1,0 +1,47 @@
+{
+  "voice": "en-US-AndrewNeural",
+  "rate": "+4%",
+  "segments": [
+    {
+      "image": "home.jpg",
+      "label": "Shiplog",
+      "text": "This is Shiplog: a personal dev board that keeps itself in sync with GitHub. It follows one loop. Plan, code, log, and share."
+    },
+    {
+      "image": "dashboard.jpg",
+      "label": "Connect",
+      "text": "Sign in with GitHub, then choose which repos Shiplog can read through a GitHub App. Every repo becomes a project, and your real contribution year sits on top. Click any day to see what you worked on."
+    },
+    {
+      "image": "board.jpg",
+      "label": "1 · Plan",
+      "text": "Plan. Each project gets its own kanban board. Open GitHub issues sync in as cards, right next to your private to-dos."
+    },
+    {
+      "image": "board.jpg",
+      "label": "2 · Code",
+      "zoom": "right",
+      "text": "Code. Signed GitHub webhooks move the cards for you. Open a pull request that says fixes number twelve, and card twelve moves to in progress. Mark it ready, it's in review. Merge it, and it's done."
+    },
+    {
+      "image": "galaxy.gif",
+      "label": "In 3D",
+      "text": "Prefer 3D? The galaxy view turns every column into a planet, with its cards orbiting as little ships you can fly between them."
+    },
+    {
+      "image": "journal.jpg",
+      "label": "3 · Log",
+      "text": "Log. Every evening, Gemini turns the day's commits, issues and pull requests into a short journal entry you can edit. Each week becomes a summary with CV-ready bullet points. Private repos never leave the app."
+    },
+    {
+      "image": "public-page.jpg",
+      "label": "4 · Share",
+      "text": "Share. Switch on a public page, and anyone can upvote your roadmap and read a changelog that your merged pull requests write for you."
+    },
+    {
+      "image": "home.jpg",
+      "label": "shiplog-silk.vercel.app",
+      "text": "Plan, code, log, share. That's Shiplog, built with Next.js, TypeScript, Prisma and Postgres, and deployed on Vercel."
+    }
+  ]
+}

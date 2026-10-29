@@ -14,6 +14,11 @@ function waveHeight(x: number, z: number, t: number, amplitude: number) {
   );
 }
 
+// The sea runs from behind the boat to past the camera, so the bottom of the
+// view is always water and the page background never shows through.
+const SEA_DEPTH = 34;
+const SEA_CENTER_Z = 6;
+
 function Sea({ amplitude, speed, frozen }: { amplitude: number; speed: number; frozen: boolean }) {
   const sea = useRef<THREE.Mesh<THREE.PlaneGeometry>>(null);
   const time = useRef(0);
@@ -26,16 +31,17 @@ function Sea({ amplitude, speed, frozen }: { amplitude: number; speed: number; f
     const geometry = sea.current.geometry;
     const positions = geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < positions.count; i++) {
-      positions.setZ(i, waveHeight(positions.getX(i), -positions.getY(i), time.current, amplitude));
+      const z = SEA_CENTER_Z - positions.getY(i);
+      positions.setZ(i, waveHeight(positions.getX(i), z, time.current, amplitude));
     }
     positions.needsUpdate = true;
     geometry.computeVertexNormals();
   });
 
   return (
-    <mesh ref={sea} rotation-x={-Math.PI / 2}>
-      <planeGeometry args={[140, 14, 200, 20]} />
-      <meshStandardMaterial color="#0e7490" flatShading transparent opacity={0.9} roughness={0.4} />
+    <mesh ref={sea} rotation-x={-Math.PI / 2} position-z={SEA_CENTER_Z}>
+      <planeGeometry args={[140, SEA_DEPTH, 200, 48]} />
+      <meshStandardMaterial color="#0e7490" flatShading roughness={0.4} />
     </mesh>
   );
 }

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { FolderAction, FolderCard } from "@/components/folder-card";
 import { HomeCta, HomeCtaPlaceholder } from "@/components/home-cta";
 import { HomeSea } from "@/components/home-sea";
+import { HowItWorksVideo } from "@/components/how-it-works-video";
 
 const steps = [
   { title: "Plan", text: "Issues become cards" },
@@ -38,9 +39,7 @@ export default function Home() {
           <Suspense fallback={<HomeCtaPlaceholder />}>
             <HomeCta />
           </Suspense>
-          <a href="#how-it-works" className="btn-ghost h-12 px-7 text-sm font-semibold">
-            See how it works
-          </a>
+          <HowItWorksVideo />
         </div>
 
         {/* The sea strip along the bottom of the page, plus its caption. */}
