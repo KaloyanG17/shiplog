@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSession } from "@/auth";
 import { FolderAction, FolderCard, paperFor } from "@/components/folder-card";
@@ -7,6 +8,7 @@ import { DayDetail } from "@/components/day-detail";
 import { GitHubActivity, GitHubActivitySkeleton } from "@/components/github-activity";
 import { db } from "@/lib/db";
 import { getInstallUrl, getManageInstallationUrl } from "@/lib/github";
+import { SAMPLE_COOKIE } from "@/lib/sample-contributions";
 import { syncReposAction } from "./actions";
 
 export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
@@ -22,6 +24,7 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
   if (!session?.user?.id) redirect("/login");
 
   const { connected, error, sort: sortParam, day: dayParam } = await searchParams;
+  const sample = (await cookies()).get(SAMPLE_COOKIE)?.value === "1";
   const sort = parseSort(sortParam);
   const selectedDay =
     typeof dayParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dayParam) ? dayParam : undefined;
@@ -60,7 +63,7 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/dashboard">, "search
 
       {/* Loads from GitHub on its own, so the projects don't wait for it. */}
       <Suspense fallback={<GitHubActivitySkeleton />}>
-        <GitHubActivity userId={userId} selectedDay={selectedDay} sort={sortQuery} />
+        <GitHubActivity userId={userId} selectedDay={selectedDay} sort={sortQuery} sample={sample} />
       </Suspense>
 
       {selectedDay && (

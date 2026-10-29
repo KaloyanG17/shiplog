@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { setSampleDataAction } from "@/app/dashboard/actions";
 import { ActivityViews } from "@/components/activity-views";
 import { getContributions, type ContributionLevel } from "@/lib/contributions";
+import { sampleContributions } from "@/lib/sample-contributions";
 
 // Shiplog's palette instead of GitHub's greens: quiet teal for light days,
 // warm orange for busy ones.
@@ -26,15 +28,18 @@ const longDate = (date: string) =>
   });
 
 // The past year of GitHub contributions as a heatmap, plus the repos with the
-// most commits. Reads from GitHub, so render it inside <Suspense>.
+// most commits. Reads from GitHub, so render it inside <Suspense>. With
+// `sample` on, the squares show clearly labelled demo data instead.
 export async function GitHubActivity({
   userId,
   selectedDay,
   sort,
+  sample = false,
 }: {
   userId: string;
   selectedDay?: string;
   sort?: string;
+  sample?: boolean;
 }) {
   const data = await getContributions(userId);
 
@@ -56,39 +61,57 @@ export async function GitHubActivity({
     return <section className="glass rounded-3xl p-5 text-sm text-white/80">{message}</section>;
   }
 
+  const { weeks, total } = sample ? sampleContributions(data.weeks, data.login) : data;
+
   // A month label above the first column of each month, skipping a month that
   // only gets one or two columns at the very start (it would overlap the next).
-  const starts = data.weeks.map(
-    (week, i) => i === 0 || monthName(week[0].date) !== monthName(data.weeks[i - 1][0].date),
+  const starts = weeks.map(
+    (week, i) => i === 0 || monthName(week[0].date) !== monthName(weeks[i - 1][0].date),
   );
-  const monthLabels = data.weeks.map((week, i) => {
+  const monthLabels = weeks.map((week, i) => {
     if (!starts[i]) return "";
     const next = starts.indexOf(true, i + 1);
     return next !== -1 && next - i < 3 ? "" : monthName(week[0].date);
   });
   // Columns share the panel's width, but never get smaller than 9px.
-  const columns = { gridTemplateColumns: `repeat(${data.weeks.length}, minmax(9px, 1fr))` };
+  const columns = { gridTemplateColumns: `repeat(${weeks.length}, minmax(9px, 1fr))` };
 
   return (
     <section aria-labelledby="activity-title" className="glass flex flex-col gap-4 rounded-3xl p-5">
       <header className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="activity-title" className="font-semibold">
-          {data.total.toLocaleString("en-GB")} contributions{" "}
-          <span className="font-serif text-xl font-normal italic">in the last year</span>
-          <span className="ml-2 text-xs font-normal text-white/60">Click a day to see what you did.</span>
+        <h2 id="activity-title" className="flex flex-wrap items-baseline gap-x-2 font-semibold">
+          <span>
+            {total.toLocaleString("en-GB")} contributions{" "}
+            <span className="font-serif text-xl font-normal italic">in the last year</span>
+          </span>
+          {sample ? (
+            <span className="self-center rounded-full bg-amber-300 px-2.5 py-0.5 text-xs font-bold text-neutral-900">
+              Sample data · not real activity
+            </span>
+          ) : (
+            <span className="text-xs font-normal text-white/60">Click a day to see what you did.</span>
+          )}
         </h2>
-        <a
-          href={`https://github.com/${data.login}`}
-          className="font-mono text-xs text-white/70 hover:text-white hover:underline"
-        >
-          @{data.login}
-        </a>
+        <div className="flex items-center gap-3">
+          <form action={setSampleDataAction.bind(null, !sample)}>
+            <button type="submit" className="text-xs text-white/70 hover:text-white hover:underline">
+              {sample ? "Show my real data" : "Use sample data"}
+            </button>
+          </form>
+          <a
+            href={`https://github.com/${data.login}`}
+            className="font-mono text-xs text-white/70 hover:text-white hover:underline"
+          >
+            @{data.login}
+          </a>
+        </div>
       </header>
 
       <ActivityViews
-        weeks={data.weeks}
-        selectedDay={selectedDay}
+        weeks={weeks}
+        selectedDay={sample ? undefined : selectedDay}
         sort={sort}
+        interactive={!sample}
         heatmap={
       // Scrolls sideways on small screens; most recent weeks are on the right.
       <div className="-mx-1 overflow-x-auto px-1 pb-1">
@@ -101,11 +124,22 @@ export async function GitHubActivity({
             ))}
           </div>
           <div className="grid gap-[3px]" style={columns}>
-            {data.weeks.map((week) => (
+            {weeks.map((week) => (
               <div key={week[0].date} className="grid grid-rows-7 gap-[3px]">
                 {week.map((day) => {
                   const label = `${day.contributionCount} contribution${day.contributionCount === 1 ? "" : "s"} on ${longDate(day.date)}`;
                   const selected = day.date === selectedDay;
+                  // Sample days have nothing behind them, so they aren't links.
+                  if (sample) {
+                    return (
+                      <span
+                        key={day.date}
+                        title={`${label} (sample)`}
+                        style={{ gridRowStart: day.weekday + 1 }}
+                        className={`aspect-square w-full rounded-[3px] ${LEVEL_CLASS[day.contributionLevel]}`}
+                      />
+                    );
+                  }
                   return (
                     // Each day opens its detail panel below (projects + journal).
                     <Link

@@ -46,7 +46,7 @@ export type ContributionLevel =
   | "THIRD_QUARTILE"
   | "FOURTH_QUARTILE";
 
-type ContributionDay = {
+export type ContributionDay = {
   date: string; // YYYY-MM-DD
   weekday: number; // 0 = Sunday
   contributionCount: number;

@@ -18,16 +18,20 @@ export function ActivityViews({
   weeks,
   selectedDay,
   sort,
+  interactive = true,
 }: {
   heatmap: ReactNode;
   weeks: SkylineDay[][];
   selectedDay?: string;
   sort?: string;
+  /** Off for sample data: there's no real day to open. */
+  interactive?: boolean;
 }) {
   const [view, setView] = useState<"2d" | "3d">("2d");
   const router = useRouter();
 
   function openDay(date: string) {
+    if (!interactive) return;
     const params = new URLSearchParams();
     if (sort) params.set("sort", sort);
     if (date !== selectedDay) params.set("day", date);
@@ -57,7 +61,9 @@ export function ActivityViews({
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
           <Skyline weeks={weeks} selectedDay={selectedDay} onSelect={openDay} />
-          <p className="px-4 py-2 text-xs text-white/60">Drag to orbit · scroll to zoom · click a bar to open that day</p>
+          <p className="px-4 py-2 text-xs text-white/60">
+            Drag to orbit · scroll to zoom{interactive ? " · click a bar to open that day" : " · sample data"}
+          </p>
         </div>
       )}
     </div>

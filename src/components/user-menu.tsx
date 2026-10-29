@@ -8,14 +8,22 @@ export async function UserMenu() {
 
   if (!session?.user) {
     return (
-      <Link href="/login" className="text-sm font-medium hover:underline">
-        Sign in
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/explore" className="text-sm font-medium hover:underline">
+          Explore
+        </Link>
+        <Link href="/login" className="text-sm font-medium hover:underline">
+          Sign in
+        </Link>
+      </div>
     );
   }
 
   return (
     <div className="flex items-center gap-4">
+      <Link href="/explore" className="text-sm font-medium hover:underline">
+        Explore
+      </Link>
       <Link href="/dashboard" className="text-sm font-medium hover:underline">
         Dashboard
       </Link>

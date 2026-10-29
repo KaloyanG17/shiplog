@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { currentVoterHash } from "@/lib/voter";
@@ -80,6 +81,9 @@ async function PublicProject({ params }: Pick<PageProps<"/p/[slug]">, "params">)
   return (
     <div className="flex flex-col gap-10 text-white">
       <header className="flex flex-col gap-3">
+        <Link href="/explore" className="w-fit text-sm text-white/75 hover:text-white hover:underline">
+          ← All public projects
+        </Link>
         <p className="w-fit rounded-full bg-white/15 px-3 py-1 text-xs font-medium backdrop-blur">⛵ Built in public with Shiplog</p>
         <h1 className="flex flex-wrap items-baseline gap-x-3 leading-none tracking-tight">
           <span className="text-5xl font-black sm:text-6xl">{project.name}</span>
