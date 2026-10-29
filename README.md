@@ -54,6 +54,9 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
   | Issue reopened | **To do** |
   | Issue edited / deleted | Card updated / removed |
 
+- **…and GitHub follows the board.** Moving an issue card to Done closes the issue, moving it out of Done reopens it, and the issue keeps one `shiplog: <column>` status label. The webhooks those changes trigger don't undo your move.
+- **PR status on cards:** a card linked to a pull request shows its CI result (running, passed, failed) and review state (approved, changes requested), updated by `check_run` and `pull_request_review` webhooks.
+
 - **Activity feed** in plain English: "merged PR #4: Add login", "pushed 3 commits to main: …".
 - **Live updates:** project pages refresh in the background, so webhook changes appear without a reload.
 - **Daily AI journal:** every evening Gemini turns the day's commits, issues and PRs across your public repos into a short first-person entry. Private repos are never sent to the model. You can edit it to add what GitHub can't see (what you learned, what got you stuck), regenerate it, or write today's entry on demand. Days follow your local time zone, not UTC.
@@ -101,7 +104,7 @@ flowchart LR
 ```
 
 1. **Login** uses a GitHub OAuth app through Auth.js; sessions live in Postgres via the Prisma adapter.
-2. **Repo access** uses a separate GitHub App with read-only permissions. After installing it, GitHub redirects to `/api/github/setup`, which links the installation to the signed-in user and syncs its repos.
+2. **Repo access** uses a separate GitHub App: read-only for code and pull requests, read and write for issues so card moves can update them. After installing it, GitHub redirects to `/api/github/setup`, which links the installation to the signed-in user and syncs its repos.
 3. **Webhooks** hit `/api/github/webhook`. The request signature is checked against the raw body, the event is stored, and handlers update repos and cards.
 4. **The board** is a React client component that calls server actions; every action checks that the signed-in user owns the card or project.
 5. **The journal** collects a day's events and asks Gemini for a draft. A cron job (Vercel Cron, protected by `CRON_SECRET`) writes missing entries each evening; the Journal page lets you write, edit and regenerate them.
@@ -153,6 +156,7 @@ Decisions worth calling out:
 - [x] Unit tests (Vitest) and CI on GitHub Actions
 - [x] 3D: contribution skyline, kanban galaxy, homepage sailboat
 - [x] Deploy to Vercel
+- [x] Two-way GitHub sync, with CI and review status on cards
 - [ ] End-to-end tests (Playwright) for sign-in and the board
 - [ ] Rate-limit roadmap votes
 - [ ] Error monitoring for the live site
@@ -203,8 +207,8 @@ Login uses the OAuth app above. Reading repos uses a separate **GitHub App**, so
    | Webhook → Active | ticked |
    | Webhook URL | your `SMEE_URL` (run `npm run webhooks:dev` once to get a channel) |
    | Webhook secret | the same value as `GITHUB_WEBHOOK_SECRET` in `.env` |
-   | Repository permissions | Contents, Issues, Pull requests: **Read-only** (Metadata is added automatically) |
-   | Subscribe to events | Issues, Pull request, Push |
+   | Repository permissions | Issues: **Read and write**; Contents, Pull requests, Checks: **Read-only** (Metadata is added automatically) |
+   | Subscribe to events | Issues, Pull request, Push, Check run, Pull request review |
    | Where can this GitHub App be installed? | Only on this account |
 2. After creating it, note the **App ID** and the **slug** (the end of the app's public URL, `github.com/apps/<slug>`).
 3. Under **Private keys**, click **Generate a private key**. A `.pem` file downloads.
@@ -258,6 +262,7 @@ src/
     installations.ts         Installation ownership check and repo sync
     webhooks.ts              Webhook verification and event handlers
     cards.ts                 Issue → card sync and PR-driven moves
+    github-sync.ts           Card → issue sync (close/reopen, labels), PR checks and reviews
     activity.ts              Event → one-line summary
     journal.ts               Day ranges, activity digest, Gemini drafts with model fallback
 vercel.json                  Cron schedule for the journal job
