@@ -60,7 +60,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 - **Weekly summary → CV bullets:** one click turns the week's journal into a short summary and three CV-ready bullet points, with a Copy button.
 - **Public project page** (`/p/<project>`): switch it on per project to share an upvotable roadmap of open cards (anonymous, one vote per visitor) and a changelog that merged PRs add to automatically.
 - **Explore** (`/explore`): every public project in one list of cards, open to anyone without signing in.
-- **Contribution heatmap:** your real GitHub contribution year on the dashboard. Click a day to see the projects you worked on and that day's journal entry.
+- **Contribution heatmap:** your real GitHub contribution year on the dashboard. Click a day to see the projects you worked on and that day's journal entry. A labelled sample-data mode fills it in for demos.
 - **In 3D** (React Three Fiber, loaded only when used, and still for reduced motion):
   - **Contribution skyline:** a 2D / 3D switch turns the heatmap into a city of bars you can orbit; click a bar to open that day.
   - **Kanban galaxy:** each column is a planet and its cards orbit it as small ships; grab one and fly it to another planet to move the card.
