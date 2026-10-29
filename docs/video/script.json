@@ -10,7 +10,7 @@
     {
       "image": "dashboard.jpg",
       "label": "Connect",
-      "text": "Sign in with GitHub, then choose which repos Shiplog can read through a GitHub App. Every repo becomes a project, and your real contribution year sits on top. Click any day to see what you worked on."
+      "text": "Sign in with GitHub, then choose which repos Shiplog can read through a GitHub App. Every repo becomes a project, and a heatmap of your GitHub contributions sits on top. Click any day to see what you worked on."
     },
     {
       "image": "board.jpg",
@@ -37,6 +37,11 @@
       "image": "public-page.jpg",
       "label": "4 · Share",
       "text": "Share. Switch on a public page, and anyone can upvote your roadmap and read a changelog that your merged pull requests write for you."
+    },
+    {
+      "image": "explore.jpg",
+      "label": "Explore",
+      "text": "And Explore lists every public project in one place, so anyone can browse what people are shipping, without signing in."
     },
     {
       "image": "home.jpg",

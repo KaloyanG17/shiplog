@@ -5,29 +5,33 @@ WEBVTT
 This is Shiplog: a personal dev board that keeps itself in sync with GitHub. It follows one loop. Plan, code, log, and share.
 
 2
-00:00:09.510 --> 00:00:20.930
-Sign in with GitHub, then choose which repos Shiplog can read through a GitHub App. Every repo becomes a project, and your real contribution year sits on top. Click any day to see what you worked on.
+00:00:09.510 --> 00:00:21.870
+Sign in with GitHub, then choose which repos Shiplog can read through a GitHub App. Every repo becomes a project, and a heatmap of your GitHub contributions sits on top. Click any day to see what you worked on.
 
 3
-00:00:21.630 --> 00:00:29.550
+00:00:22.570 --> 00:00:30.490
 Plan. Each project gets its own kanban board. Open GitHub issues sync in as cards, right next to your private to-dos.
 
 4
-00:00:30.250 --> 00:00:42.420
+00:00:31.190 --> 00:00:43.360
 Code. Signed GitHub webhooks move the cards for you. Open a pull request that says fixes number twelve, and card twelve moves to in progress. Mark it ready, it's in review. Merge it, and it's done.
 
 5
-00:00:43.120 --> 00:00:51.400
+00:00:44.060 --> 00:00:52.340
 Prefer 3D? The galaxy view turns every column into a planet, with its cards orbiting as little ships you can fly between them.
 
 6
-00:00:52.100 --> 00:01:05.440
+00:00:53.040 --> 00:01:06.380
 Log. Every evening, Gemini turns the day's commits, issues and pull requests into a short journal entry you can edit. Each week becomes a summary with CV-ready bullet points. Private repos never leave the app.
 
 7
-00:01:06.140 --> 00:01:13.820
+00:01:07.080 --> 00:01:14.760
 Share. Switch on a public page, and anyone can upvote your roadmap and read a changelog that your merged pull requests write for you.
 
 8
-00:01:14.520 --> 00:01:23.570
+00:01:15.460 --> 00:01:22.320
+And Explore lists every public project in one place, so anyone can browse what people are shipping, without signing in.
+
+9
+00:01:23.020 --> 00:01:32.070
 Plan, code, log, share. That's Shiplog, built with Next.js, TypeScript, Prisma and Postgres, and deployed on Vercel.

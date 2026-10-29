@@ -26,7 +26,7 @@ export function HowItWorksVideo() {
 
       <dialog
         ref={dialog}
-        aria-label="How Shiplog works (84-second video)"
+        aria-label="How Shiplog works (93-second video)"
         onClose={() => video.current?.pause()}
         // Clicking the backdrop (the dialog itself, outside the panel) closes it.
         onClick={(event) => event.target === dialog.current && close()}
