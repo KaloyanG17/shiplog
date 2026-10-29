@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayRange, dayToDate, localDay } from "@/lib/journal";
+import { dayRange, dayToDate, isTransient, localDay } from "@/lib/journal";
 
 // JOURNAL_TIME_ZONE is Europe/Sofia in vitest.config.mts:
 // UTC+2 in winter, UTC+3 in summer.
@@ -33,5 +33,21 @@ describe("localDay", () => {
 
   it("round-trips with dayToDate", () => {
     expect(dayToDate("2026-01-05").toISOString()).toBe("2026-01-05T00:00:00.000Z");
+  });
+});
+
+describe("isTransient", () => {
+  // Production builds minify class names, so a timeout can't be spotted by name.
+  it("treats an error with no HTTP response as transient", () => {
+    class eG extends Error {}
+    expect(isTransient(new eG("Request timed out"))).toBe(true);
+    expect(isTransient(Object.assign(new Error("timed out"), { status: undefined }))).toBe(true);
+  });
+
+  it("retries busy and quota errors but not bad requests", () => {
+    expect(isTransient({ status: 503 })).toBe(true);
+    expect(isTransient({ status: 429 })).toBe(true);
+    expect(isTransient({ status: 400 })).toBe(false);
+    expect(isTransient({ status: 404 })).toBe(false);
   });
 });

@@ -45,10 +45,12 @@ function errorStatus(error: unknown) {
     : NaN;
 }
 
-// Busy, out of quota, or slow: worth trying the next model.
-function isTransient(error: unknown) {
+// Busy, out of quota, or slow: worth trying the next model. An error with no
+// HTTP status never got a response (timeout, dropped connection). Don't rely on
+// error class names here: production builds minify them.
+export function isTransient(error: unknown) {
   const status = errorStatus(error);
-  return [429, 500, 503, 504].includes(status) || (error instanceof Error && error.name.includes("Timeout"));
+  return Number.isNaN(status) || [429, 500, 502, 503, 504].includes(status);
 }
 
 // "2026-10-28" for the calendar day `instant` falls on in the journal time zone.
