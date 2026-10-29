@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import type { CardColumn } from "@/generated/prisma/enums";
+import type { CardColumn, PrChecks, PrReview } from "@/generated/prisma/enums";
 import { addCardAction, deleteCardAction, moveCardAction } from "./actions";
 
 export type BoardCard = {
@@ -12,6 +12,20 @@ export type BoardCard = {
   issueNumber: number | null;
   url: string | null;
   prNumber: number | null;
+  prUrl: string | null;
+  prChecks: PrChecks | null;
+  prReview: PrReview | null;
+};
+
+const CHECKS: Record<PrChecks, { label: string; dot: string }> = {
+  PENDING: { label: "Checks running", dot: "bg-amber-300 animate-pulse motion-reduce:animate-none" },
+  SUCCESS: { label: "Checks passed", dot: "bg-emerald-400" },
+  FAILURE: { label: "Checks failed", dot: "bg-red-400" },
+};
+
+const REVIEWS: Record<PrReview, { label: string; className: string }> = {
+  APPROVED: { label: "Approved", className: "bg-emerald-400/15 text-emerald-200" },
+  CHANGES_REQUESTED: { label: "Changes requested", className: "bg-red-400/15 text-red-200" },
 };
 
 const COLUMNS: { id: CardColumn; label: string }[] = [
@@ -34,13 +48,16 @@ export function Board({ projectId, cards }: { projectId: string; cards: BoardCar
   const [, startTransition] = useTransition();
   const [dragOver, setDragOver] = useState<CardColumn | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   function move(id: string, column: CardColumn) {
     setError(null);
+    setWarning(null);
     startTransition(async () => {
       applyMove({ id, column });
       try {
-        await moveCardAction(id, column);
+        const result = await moveCardAction(id, column);
+        if (result.warning) setWarning(result.warning);
       } catch {
         setError("Couldn't move the card. Try again.");
       }
@@ -50,6 +67,7 @@ export function Board({ projectId, cards }: { projectId: string; cards: BoardCar
   return (
     <div className="flex flex-col gap-2">
       {error && <p className="text-sm text-red-300">{error}</p>}
+      {warning && <p className="text-sm text-amber-200">{warning}</p>}
       {/* Five columns share the width on wide screens and scroll sideways on phones. */}
       <div className="-mx-4 overflow-x-auto px-4 pb-2">
         <div className="grid grid-cols-[repeat(5,minmax(11rem,1fr))] gap-3">
@@ -132,8 +150,26 @@ function CardItem({
           <span className="rounded-full border border-white/20 px-1.5">to-do</span>
         )}
         {card.prNumber !== null && (
-          <span className="rounded-full bg-purple-400/20 px-1.5 text-purple-200">
+          <a
+            href={card.prUrl ?? undefined}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-purple-400/20 px-1.5 text-purple-200 hover:underline"
+          >
+            {card.prChecks && (
+              <span
+                aria-hidden
+                title={CHECKS[card.prChecks].label}
+                className={`size-1.5 rounded-full ${CHECKS[card.prChecks].dot}`}
+              />
+            )}
             PR #{card.prNumber}
+            {card.prChecks && <span className="sr-only">, {CHECKS[card.prChecks].label}</span>}
+          </a>
+        )}
+        {card.prReview && (
+          <span className={`rounded-full px-1.5 ${REVIEWS[card.prReview].className}`}>
+            {REVIEWS[card.prReview].label}
           </span>
         )}
       </div>

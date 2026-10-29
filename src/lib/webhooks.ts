@@ -1,6 +1,6 @@
 import { Webhooks, type EmitterWebhookEvent } from "@octokit/webhooks";
 import type { Prisma } from "@/generated/prisma/client";
-import { handleIssueEvent, handlePullRequestEvent } from "@/lib/cards";
+import { handleIssueEvent, handlePullRequestEvent, refreshPrStatusSafely } from "@/lib/cards";
 import { db } from "@/lib/db";
 import { addRepos, removeRepos } from "@/lib/installations";
 
@@ -47,6 +47,18 @@ function registerHandlers(webhooks: Webhooks) {
         update: { title: pr.title },
       });
     }
+  });
+
+  // CI runs and code reviews update the status shown on linked cards.
+  webhooks.on("check_run", async ({ payload }) => {
+    const repo = await findRepo(payload.repository.id);
+    if (!repo) return;
+    const numbers = payload.check_run.pull_requests.map((pr) => pr.number);
+    await refreshPrStatusSafely(repo.id, numbers);
+  });
+  webhooks.on("pull_request_review", async ({ payload }) => {
+    const repo = await findRepo(payload.repository.id);
+    if (repo) await refreshPrStatusSafely(repo.id, [payload.pull_request.number]);
   });
 
   // Repos added to or removed from the installation on GitHub.

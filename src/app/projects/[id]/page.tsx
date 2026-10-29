@@ -41,15 +41,22 @@ async function ProjectView({ params }: Pick<PageProps<"/projects/[id]">, "params
     }),
   ]);
 
-  const cards: BoardCard[] = project.cards.map((card) => ({
-    id: card.id,
-    title: card.title,
-    column: card.column,
-    position: card.position,
-    issueNumber: card.githubIssueNumber,
-    url: card.githubUrl,
-    prNumber: card.linkedPrNumber,
-  }));
+  const repoUrl = new Map(project.repos.map((repo) => [repo.id, repo.htmlUrl]));
+  const cards: BoardCard[] = project.cards.map((card) => {
+    const base = card.repoId ? repoUrl.get(card.repoId) : undefined;
+    return {
+      id: card.id,
+      title: card.title,
+      column: card.column,
+      position: card.position,
+      issueNumber: card.githubIssueNumber,
+      url: card.githubUrl,
+      prNumber: card.linkedPrNumber,
+      prUrl: base && card.linkedPrNumber !== null ? `${base}/pull/${card.linkedPrNumber}` : null,
+      prChecks: card.prChecks,
+      prReview: card.prReview,
+    };
+  });
   const done = cards.filter((card) => card.column === "DONE").length;
 
   return (

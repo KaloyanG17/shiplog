@@ -315,7 +315,8 @@ export default function Galaxy({ cards }: { cards: BoardCard[] }) {
     startTransition(async () => {
       applyMove({ id, column });
       try {
-        await moveCardAction(id, column);
+        const result = await moveCardAction(id, column);
+        if (result.warning) setError(result.warning);
       } catch {
         setError("Couldn't move the card. Try again.");
       }

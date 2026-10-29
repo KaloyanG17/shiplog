@@ -128,6 +128,17 @@ enum CardColumn {
   DONE
 }
 
+enum PrChecks {
+  PENDING
+  SUCCESS
+  FAILURE
+}
+
+enum PrReview {
+  APPROVED
+  CHANGES_REQUESTED
+}
+
 model Card {
   id                String        @id @default(cuid())
   title             String
@@ -144,6 +155,9 @@ model Card {
   githubUrl         String?
   // Latest open/merged PR that says it closes this issue ("Fixes #12").
   linkedPrNumber    Int?
+  // That PR's latest CI and review status, kept up to date by webhooks.
+  prChecks          PrChecks?
+  prReview          PrReview?
   votes             RoadmapVote[]
 
   createdAt DateTime @default(now())

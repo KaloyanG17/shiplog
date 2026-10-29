@@ -6,6 +6,7 @@ import { getSession } from "@/auth";
 import { CardColumn } from "@/generated/prisma/enums";
 import { importOpenIssues, nextPosition } from "@/lib/cards";
 import { db } from "@/lib/db";
+import { pushCardStatus } from "@/lib/github-sync";
 
 // Server actions are public endpoints: every one re-checks that the signed-in
 // user owns the project or card it touches.
@@ -32,16 +33,20 @@ async function requireOwnedCard(cardId: string) {
 const columnSchema = z.enum(CardColumn);
 const titleSchema = z.string().trim().min(1).max(200);
 
-export async function moveCardAction(cardId: string, column: CardColumn) {
+// Moves the card, then mirrors the move on its GitHub issue (close/reopen and
+// a status label). Returns a warning when GitHub couldn't be updated.
+export async function moveCardAction(cardId: string, column: CardColumn): Promise<{ warning?: string }> {
   const card = await requireOwnedCard(cardId);
   const target = columnSchema.parse(column);
-  if (card.column === target) return;
+  if (card.column === target) return {};
 
   await db.card.update({
     where: { id: card.id },
     data: { column: target, position: await nextPosition(card.projectId, target) },
   });
+  const sync = await pushCardStatus(card.id);
   refresh();
+  return sync.ok ? {} : { warning: sync.message };
 }
 
 export async function addCardAction(projectId: string, title: string) {

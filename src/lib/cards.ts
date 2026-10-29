@@ -1,6 +1,7 @@
 import type { CardColumn } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { getGithubApp } from "@/lib/github";
+import { pushCardStatus, refreshPrStatus } from "@/lib/github-sync";
 
 type RepoRef = { id: string; projectId: string | null };
 
@@ -31,9 +32,10 @@ export async function nextPosition(projectId: string, column: CardColumn) {
 }
 
 // Creates or updates the card mirroring a GitHub issue. `column` moves the
-// card; without it an existing card stays where the user put it.
+// card; without it an existing card stays where the user put it. Returns the
+// card's id when an existing card changed column.
 export async function upsertIssueCard(repo: RepoRef, issue: IssueInfo, column?: CardColumn) {
-  if (!repo.projectId) return;
+  if (!repo.projectId) return null;
 
   const fields = {
     title: issue.title,
@@ -54,7 +56,7 @@ export async function upsertIssueCard(repo: RepoRef, issue: IssueInfo, column?: 
         ? { ...fields, column, position: await nextPosition(repo.projectId, column) }
         : fields,
     });
-    return;
+    return move ? existing.id : null;
   }
 
   const startColumn = column ?? (issue.state === "closed" ? "DONE" : "BACKLOG");
@@ -68,6 +70,7 @@ export async function upsertIssueCard(repo: RepoRef, issue: IssueInfo, column?: 
       repoId: repo.id,
     },
   });
+  return null;
 }
 
 export async function handleIssueEvent(repo: RepoRef, action: string, issue: IssueInfo) {
@@ -75,9 +78,20 @@ export async function handleIssueEvent(repo: RepoRef, action: string, issue: Iss
     await db.card.deleteMany({ where: { githubIssueId: BigInt(issue.id) } });
     return;
   }
-  const column: CardColumn | undefined =
-    action === "closed" ? "DONE" : action === "reopened" ? "TODO" : undefined;
-  await upsertIssueCard(repo, issue, column);
+  let column: CardColumn | undefined;
+  if (action === "closed") column = "DONE";
+  if (action === "reopened") {
+    // Reopened from GitHub: back to To do. But when Shiplog reopened it (the
+    // user dragged the card out of Done), the card has already moved, so
+    // leave it where the user put it.
+    const card = await db.card.findUnique({
+      where: { githubIssueId: BigInt(issue.id) },
+      select: { column: true },
+    });
+    if (!card || card.column === "DONE") column = "TODO";
+  }
+  const moved = await upsertIssueCard(repo, issue, column);
+  if (moved) await pushCardStatus(moved);
 }
 
 // Same-repo issue numbers a PR says it closes, e.g. "Fixes #12, closes #3".
@@ -102,11 +116,20 @@ export async function handlePullRequestEvent(repo: RepoRef, action: string, pr: 
         where: { id: card.id },
         data: {
           linkedPrNumber: null,
+          prChecks: null,
+          prReview: null,
           column: "IN_PROGRESS",
           position: await nextPosition(projectId, "IN_PROGRESS"),
         },
       });
+      await pushCardStatus(card.id);
     }
+    return;
+  }
+
+  // New commits on the PR: its checks start over.
+  if (action === "synchronize") {
+    await refreshPrStatusSafely(repo.id, [pr.number]);
     return;
   }
 
@@ -125,11 +148,27 @@ export async function handlePullRequestEvent(repo: RepoRef, action: string, pr: 
   });
   for (const card of cards) {
     // A finished card only moves again when the user reopens the issue.
-    if (card.column === "DONE" || card.column === column) continue;
+    if (card.column === "DONE") continue;
+    if (card.column === column) {
+      await db.card.update({ where: { id: card.id }, data: { linkedPrNumber: pr.number } });
+      continue;
+    }
     await db.card.update({
       where: { id: card.id },
       data: { linkedPrNumber: pr.number, column, position: await nextPosition(projectId, column) },
     });
+    await pushCardStatus(card.id);
+  }
+  if (action !== "closed") await refreshPrStatusSafely(repo.id, [pr.number]);
+}
+
+// CI and review status is a nice-to-have: a GitHub hiccup (or a missing
+// Checks permission) shouldn't fail the whole webhook delivery.
+export async function refreshPrStatusSafely(repoId: string, prNumbers: number[]) {
+  try {
+    await refreshPrStatus(repoId, prNumbers);
+  } catch (error) {
+    console.error("Couldn't refresh PR status:", error);
   }
 }
 
