@@ -1,19 +1,18 @@
-# Shiplog
+<a href="https://shiplog-silk.vercel.app"><img src="docs/cover.jpg" alt="Shiplog: a developer board that keeps itself in sync with GitHub and writes an AI journal of your day" width="100%"></a>
 
-**A personal dev board that keeps itself up to date from GitHub.**
+<p align="center">
+  <a href="https://shiplog-silk.vercel.app"><img src="https://img.shields.io/badge/Live%20demo-shiplog--silk.vercel.app-F39A5B?style=for-the-badge&logo=vercel&logoColor=black&labelColor=1D130D" alt="Live demo"></a>
+  <a href="https://github.com/KaloyanG17/shiplog/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/KaloyanG17/shiplog/ci.yml?style=for-the-badge&label=CI&labelColor=1D130D" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Next.js%2016-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 16">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma">
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
+</p>
+
+**Shiplog is a personal dev board that keeps itself up to date from GitHub.**
 Issues become cards, pull requests move them across the board, every push, issue and PR lands in a project activity feed, and each evening an AI writes up your day in a dev journal.
 
-[![CI](https://github.com/KaloyanG17/shiplog/actions/workflows/ci.yml/badge.svg)](https://github.com/KaloyanG17/shiplog/actions/workflows/ci.yml)
-![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6?logo=typescript&logoColor=white)
-![React 19](https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=black)
-![Prisma 7](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169e1?logo=postgresql&logoColor=white)
-![Tailwind CSS 4](https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss&logoColor=white)
-![Three.js](https://img.shields.io/badge/Three.js-React_Three_Fiber-000000?logo=threedotjs)
-![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-000000?logo=vercel)
-
-**Live: [shiplog-silk.vercel.app](https://shiplog-silk.vercel.app)** · **Public roadmap & changelog: [shiplog-silk.vercel.app/p/shiplog](https://shiplog-silk.vercel.app/p/shiplog)** (no sign-in needed)
+**Public roadmap & changelog: [shiplog-silk.vercel.app/p/shiplog](https://shiplog-silk.vercel.app/p/shiplog)** (no sign-in needed)
 
 ![Shiplog project board: five columns of cards, from Backlog to Done](docs/screenshots/board.jpg)
 
@@ -21,7 +20,8 @@ Issues become cards, pull requests move them across the board, every push, issue
 
 ---
 
-## Why
+
+## 01 · Why
 
 As a solo developer my tasks lived in one place, my code in GitHub, and my notes nowhere. When it was time for a standup, a review or a CV update, I couldn't remember what I'd shipped. Shiplog uses GitHub activity as the source of truth, so the board and the history keep themselves current.
 
@@ -34,7 +34,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 | **Log** | Activity feed per project; AI-drafted daily journal; weekly summary with CV bullets | Working |
 | **Share** | Public project page with an upvotable roadmap and a changelog of merged PRs | Working |
 
-## Features
+## 02 · Features
 
 - **Sign in with GitHub** (Auth.js), with sessions stored in PostgreSQL.
 - **Connect repos with a GitHub App.** You pick exactly which repos Shiplog can read, and each repo becomes a project. Repos added or removed on GitHub are synced automatically.
@@ -84,7 +84,7 @@ As a solo developer my tasks lived in one place, my code in GitHub, and my notes
 
 *The dashboard screenshot uses the heatmap's labelled sample-data mode.*
 
-## How it works
+## 03 · How it works
 
 ```mermaid
 flowchart LR
@@ -109,7 +109,7 @@ flowchart LR
 4. **The board** is a React client component that calls server actions; every action checks that the signed-in user owns the card or project.
 5. **The journal** collects a day's events and asks Gemini for a draft. A cron job (Vercel Cron, protected by `CRON_SECRET`) writes missing entries each evening; the Journal page lets you write, edit and regenerate them.
 
-## Engineering notes
+## 04 · Engineering notes
 
 Decisions worth calling out:
 
@@ -126,7 +126,7 @@ Decisions worth calling out:
 - **Time-zone-correct days:** "today" means the developer's calendar day (Europe/Sofia by default), computed with `Intl` and checked across daylight-saving changes, including the 25-hour day in October.
 - **Accessibility:** drag and drop has a keyboard- and touch-friendly dropdown alternative, columns are labelled regions, and controls have screen-reader labels.
 
-## Tech stack
+## 05 · Tech stack
 
 | Area | Choice |
 |---|---|
@@ -143,7 +143,7 @@ Decisions worth calling out:
 | Validation | Zod |
 | Local webhooks | [smee.io](https://smee.io) tunnel |
 
-## Roadmap
+## 06 · Roadmap
 
 - [x] GitHub login (Auth.js + Prisma)
 - [x] Connect repos through a GitHub App; one project per repo
@@ -164,7 +164,7 @@ Decisions worth calling out:
 
 ---
 
-## Running it locally
+## 07 · Running it locally
 
 Requires Node.js 20+ and a PostgreSQL database (a local install, or a free one from [Neon](https://neon.tech) or [Supabase](https://supabase.com)).
 
@@ -271,3 +271,7 @@ vercel.json                  Cron schedule for the journal job
 ---
 
 Built by [Kaloyan Gadarov](https://github.com/KaloyanG17).
+
+---
+
+<p align="center"><sub>Designed and built by <a href="https://github.com/KaloyanG17">Kaloyan Gaydarov</a> · <a href="https://www.linkedin.com/in/kaloyan-gaydarov/">LinkedIn</a></sub></p>
